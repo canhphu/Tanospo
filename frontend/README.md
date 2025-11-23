@@ -1,70 +1,166 @@
-# Getting Started with Create React App
+# TanoSpo - Sports Location Finder
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A modern React application for finding and exploring sports locations with real-time weather information and interactive maps.
 
-## Available Scripts
+## 🚀 Features
 
-In the project directory, you can run:
+- **User Authentication**: Login and registration system with Google OAuth support
+- **Sports Selection**: Browse different sports categories
+- **Real-time Weather**: Get current weather conditions based on your location
+- **Location Discovery**: Find nearby sports facilities with detailed information
+- **Interactive Maps**: Full-screen map integration with location details
+- **Responsive Design**: Modern UI that works on all devices
+- **Japanese Language Support**: Localized interface in Japanese
 
-### `npm start`
+## 🛠️ Tech Stack
 
-Runs the app in the development mode.\
+- **Frontend**: React 19.2.0
+- **Routing**: React Router DOM 7.9.6
+- **Authentication**: React Google Login
+- **Maps**: OpenStreetMap integration
+- **Weather**: OpenWeatherMap API integration
+- **Styling**: Modern CSS with gradients and animations
+- **Build Tool**: Create React App
+
+## 📦 Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/canhphu/Tanospo.git
+cd Tanospo/frontend
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Set up environment variables:
+```bash
+# Create a .env file in the frontend directory
+REACT_APP_GOOGLE_CLIENT_ID=your_google_client_id
+REACT_APP_OPENWEATHER_API_KEY=your_openweather_api_key
+```
+
+## 🏃‍♂️ Usage
+
+### Development Mode
+```bash
+npm start
+```
 Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Build for Production
+```bash
+npm run build
+```
+Builds the app for production to the `build` folder.
 
-### `npm test`
+### Running Tests
+```bash
+npm test
+```
+Launches the test runner in the interactive watch mode.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 📱 App Flow
 
-### `npm run build`
+1. **Login/Register**: User authentication with email/password or Google OAuth
+2. **Sports Selection**: Choose your preferred sport category
+3. **Weather Check**: View current weather conditions for your location
+4. **Location Discovery**: Browse nearby sports facilities with detailed information
+5. **Map View**: Interactive map showing selected locations with navigation options
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 🌐 Key Features Explained
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Authentication System
+- Email/password login
+- Google OAuth integration
+- Secure session management
+- Password reset functionality
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Weather Integration
+- Real-time weather data based on user's location
+- Temperature, humidity, and wind speed
+- Air quality indicators
+- Weather-appropriate recommendations
 
-### `npm run eject`
+### Location Services
+- Detailed facility information
+- Operating hours and ratings
+- Available amenities
+- Distance from current location
+- Interactive map integration
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### UI/UX Features
+- Modern gradient designs
+- Smooth animations and transitions
+- Mobile-responsive layout
+- Interactive modals and overlays
+- Consistent color scheme
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## 🎨 Design System
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+- **Primary Colors**: Purple to blue gradients (#667eea to #764ba2)
+- **Secondary Colors**: Orange to yellow gradients (#eac066 to #ee8331)
+- **Typography**: Clean, modern fonts with proper hierarchy
+- **Animations**: Subtle hover effects and smooth transitions
+- **Layout**: Card-based design with proper spacing
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 🔧 Configuration
 
-## Learn More
+### Environment Variables
+- `REACT_APP_GOOGLE_CLIENT_ID`: Google OAuth client ID
+- `REACT_APP_OPENWEATHER_API_KEY`: OpenWeatherMap API key
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### API Integration
+- **OpenWeatherMap**: For real-time weather data
+- **OpenStreetMap**: For interactive map functionality
+- **Google OAuth**: For user authentication
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## 📂 Project Structure
 
-### Code Splitting
+```
+frontend/
+├── public/          # Static assets
+├── src/
+│   ├── components/  # Reusable components
+│   ├── context/     # React context (Auth)
+│   ├── pages/       # Page components
+│   │   ├── Dashboard.js
+│   │   ├── Login.js
+│   │   ├── Register.js
+│   │   ├── Sports.js
+│   │   ├── Weather.js
+│   │   └── Map.js
+│   └── styles/      # CSS stylesheets
+├── package.json
+└── README.md
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## 🚀 Deployment
 
-### Analyzing the Bundle Size
+The app is ready for deployment to various platforms:
+- **Netlify**: Static site hosting
+- **Vercel**: Serverless deployment
+- **GitHub Pages**: Free static hosting
+- **AWS S3**: Cloud storage hosting
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## 🤝 Contributing
 
-### Making a Progressive Web App
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## 📄 License
 
-### Advanced Configuration
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
 
-### Deployment
+## 🙏 Acknowledgments
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- OpenWeatherMap for weather API
+- OpenStreetMap for map integration
+- React team for the amazing framework
+- Create React App for the project setup
