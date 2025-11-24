@@ -1,10 +1,19 @@
 import React, { useState } from "react";
-import { GoogleLogin } from 'react-google-login';
+import { useGoogleLogin } from '@react-oauth/google';
 import { useNavigate } from "react-router-dom";
 import { useAuth } from '../context/AuthContext';
 import "../styles/Login.css";
 
-const clientId = 'YOUR_GOOGLE_CLIENT_ID';
+// Helper to decode JWT credential returned by Google
+const decodeJwt = (token) => {
+  try {
+    const payload = token.split('.')[1];
+    const decoded = JSON.parse(atob(payload));
+    return decoded;
+  } catch (e) {
+    return null;
+  }
+};
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -13,7 +22,7 @@ export default function Login() {
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [resetSuccess, setResetSuccess] = useState(false);
-  const { login } = useAuth();
+  const { login, authenticate } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -36,22 +45,65 @@ export default function Login() {
     }
   };
 
-  const handleGoogleSuccess = (response) => {
-    console.log('Google login success:', response.profileObj);
-    // Handle Google login success
-    const user = {
-      email: response.profileObj.email,
-      name: response.profileObj.name,
-      token: response.tokenId
-    };
-    localStorage.setItem('user', JSON.stringify(user));
-    navigate('/dashboard');
+  const handleGoogleSuccess = async (credentialResponse) => {
+    // If Google returns an ID token in 'credential', decode it and finish
+    const credential = credentialResponse?.credential;
+    if (credential) {
+      const profile = decodeJwt(credential);
+      const user = {
+        email: profile?.email,
+        name: profile?.name || profile?.given_name || 'Google User',
+        token: credential,
+        timestamp: new Date().toISOString()
+      };
+      authenticate(user);
+      navigate('/dashboard');
+      return;
+    }
+
+    // Otherwise, Google may return an access_token — use it to fetch userinfo
+    const accessToken = credentialResponse?.access_token;
+    if (accessToken) {
+      try {
+        const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        if (!res.ok) throw new Error('Failed to fetch userinfo: ' + res.status);
+        const profile = await res.json();
+        const user = {
+          email: profile?.email,
+          name: profile?.name || profile?.given_name || 'Google User',
+          token: accessToken,
+          timestamp: new Date().toISOString()
+        };
+        authenticate(user);
+        navigate('/dashboard');
+        return;
+      } catch (err) {
+        console.error('Error fetching userinfo with access_token:', err);
+        setError('Google login succeeded but failed to fetch profile. See console.');
+        return;
+      }
+    }
+
+    const debug = JSON.stringify(credentialResponse || {}, null, 2);
+    setError('Google login failed. No credential or access_token returned. Debug: ' + debug);
+    console.warn('No credential or access_token in Google response:', credentialResponse);
   };
 
   const handleGoogleFailure = (error) => {
     console.error('Google login failed:', error);
     setError('Google login failed. Please try again.');
   };
+
+  // Hook to trigger Google OAuth with a custom button
+  const googleLogin = useGoogleLogin({
+    onSuccess: handleGoogleSuccess,
+    onError: handleGoogleFailure,
+    flow: 'implicit',
+    scope: 'openid profile email',
+    prompt: 'consent'
+  });
 
   const handleForgotPassword = () => {
     setShowForgotModal(true);
@@ -128,26 +180,20 @@ export default function Login() {
 
         <div className="divider">または</div>
 
-        <GoogleLogin
-          clientId={clientId}
-          buttonText="Googleでログイン"
-          onSuccess={handleGoogleSuccess}
-          onFailure={handleGoogleFailure}
-          cookiePolicy={'single_host_origin'}
-          render={renderProps => (
-            <button 
-              className="btn-google" 
-              onClick={renderProps.onClick} 
-              disabled={renderProps.disabled}
-            >
-              <img
-                src="https://www.svgrepo.com/show/355037/google.svg"
-                alt="google"
-              />
-              Googleでログイン
-            </button>
-          )}
-        />
+        <div className="custom-google">
+          <button
+            className="btn-google"
+            onClick={() => googleLogin()}
+            type="button"
+          >
+            <img
+              src="https://www.svgrepo.com/show/355037/google.svg"
+              alt="google"
+              style={{ width: 18, height: 18, marginRight: 8 }}
+            />
+            Googleでログイン
+          </button>
+        </div>
 
         <p className="register">
           まだアカウントがありません？

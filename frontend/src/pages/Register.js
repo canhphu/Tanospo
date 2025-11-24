@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useGoogleLogin } from '@react-oauth/google';
+import { useAuth } from '../context/AuthContext';
 import "../styles/Register.css";
 
 export default function Register() {
@@ -10,6 +12,7 @@ export default function Register() {
   });
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { authenticate } = useAuth();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -43,13 +46,83 @@ export default function Register() {
         token: 'mock-jwt-token'
       };
       
-      localStorage.setItem('user', JSON.stringify(user));
+      authenticate(user);
       navigate('/dashboard');
     } catch (err) {
       setError('登録に失敗しました。もう一度お試しください。');
       console.error('Registration error:', err);
     }
   };
+
+  // Decode JWT credential returned by Google
+  const decodeJwt = (token) => {
+    try {
+      const payload = token.split('.')[1];
+      const decoded = JSON.parse(atob(payload));
+      return decoded;
+    } catch (e) {
+      console.error('Failed to decode JWT', e);
+      return null;
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    // Prefer ID token if present
+    const credential = credentialResponse?.credential;
+    if (credential) {
+      const profile = decodeJwt(credential);
+      const user = {
+        email: profile?.email,
+        name: profile?.name || profile?.given_name || 'Google User',
+        token: credential,
+        timestamp: new Date().toISOString()
+      };
+      authenticate(user);
+      navigate('/dashboard');
+      return;
+    }
+
+    // If access_token is returned, fetch userinfo
+    const accessToken = credentialResponse?.access_token;
+    if (accessToken) {
+      try {
+        const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        if (!res.ok) throw new Error('Failed to fetch userinfo: ' + res.status);
+        const profile = await res.json();
+        const user = {
+          email: profile?.email,
+          name: profile?.name || profile?.given_name || 'Google User',
+          token: accessToken,
+          timestamp: new Date().toISOString()
+        };
+        authenticate(user);
+        navigate('/dashboard');
+        return;
+      } catch (err) {
+        console.error('Error fetching userinfo with access_token (signup):', err);
+        setError('Google signup succeeded but failed to fetch profile. Please try again.');
+        return;
+      }
+    }
+
+    setError('Google authentication failed. No credential or access_token returned.');
+  };
+
+  const handleGoogleFailure = (err) => {
+    console.error('Google signup failed', err);
+    setError('Google signup failed. Please try again.');
+  };
+
+  // Hook to trigger Google OAuth with a custom button
+  const googleLogin = useGoogleLogin({
+    onSuccess: handleGoogleSuccess,
+    onError: handleGoogleFailure,
+    flow: 'implicit',
+    scope: 'openid profile email',
+    prompt: 'consent'
+  });
 
   return (
     <div className="register-container">
@@ -97,6 +170,17 @@ export default function Register() {
             登録する
           </button>
         </form>
+
+        <div className="divider">または</div>
+
+        <button className="btn-google" onClick={() => googleLogin()} type="button">
+          <img
+            src="https://www.svgrepo.com/show/355037/google.svg"
+            alt="google"
+            style={{ width: 18, height: 18, marginRight: 8 }}
+          />
+          Googleで登録
+        </button>
 
         <p className="login-link">
           すでにアカウントをお持ちですか？

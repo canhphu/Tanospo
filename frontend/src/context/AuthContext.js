@@ -56,6 +56,17 @@ export const AuthProvider = ({ children }) => {
     return false; // Đăng nhập thất bại
   };
 
+  // Hàm authenticate: dùng để thiết lập user từ OAuth provider (Google)
+  const authenticate = (userObj) => {
+    if (!userObj) return;
+    setUser(userObj);
+    try {
+      localStorage.setItem('user', JSON.stringify(userObj));
+    } catch (e) {
+      console.error('Failed to save user to localStorage', e);
+    }
+  };
+
   // Hàm logout đã sẵn sàng và hoạt động tốt
   const logout = () => {
     setUser(null);
@@ -65,7 +76,7 @@ export const AuthProvider = ({ children }) => {
   // Tự động logout nếu token hết hạn (sau 24 giờ)
   useEffect(() => {
     if (user && !isTokenValid(user)) {
-      console.log('Token hết hạn, tự động đăng xuất.');
+      console.debug('Token expired, auto-logging out.');
       logout();
     }
   }, [user]); // Bổ sung [user] vào dependency array
@@ -77,6 +88,7 @@ export const AuthProvider = ({ children }) => {
         user,
         loading,
         login,
+        authenticate,
         logout,
         isAuthenticated: !!user && isTokenValid(user), // Kiểm tra cả user tồn tại VÀ token còn hiệu lực
       }}

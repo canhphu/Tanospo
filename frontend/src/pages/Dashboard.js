@@ -16,7 +16,7 @@ const UserDropdown = ({ onLogout, onGoToProfile }) => {
 };
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const toggleDropdown = () => {
@@ -46,7 +46,7 @@ export default function Dashboard() {
             onClick={toggleDropdown}
           />
           <span className="welcome-text">
-            Vinhさん、おはよう！頑張って先輩できるように練習を始めましょう。
+            {`${user?.name || (user?.email ? user.email.split('@')[0] : 'ゲスト')}さん、おはよう！頑張って先輩できるように練習を始めましょう。`}
           </span>
           {isDropdownOpen && (
             <UserDropdown 
