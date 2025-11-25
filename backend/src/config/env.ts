@@ -43,5 +43,6 @@ export const env = {
   },
   aqiApiKey: requireEnv(process.env.AQI_KEY, 'AQI_KEY'),
   weatherApiKey: requireEnv(process.env.OPENWEATHER_KEY, 'OPENWEATHER_KEY'),
+  jwtSecret: requireEnv(process.env.JWT_SECRET, 'JWT_SECRET'),
 };
 
