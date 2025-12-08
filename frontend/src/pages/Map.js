@@ -14,7 +14,18 @@ export default function Map() {
   const handleNavigation = () => {
     // Open Google Maps with the selected location
     const query = encodeURIComponent(selectedLocation?.name || 'Hanoi, Vietnam');
-    window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
+    window.open(`https://www.google.co.jp/maps/search/?api=1&query=${query}`, '_blank');
+  };
+
+  // Generate map URL with selected location coordinates
+  const getMapUrl = () => {
+    const lat = selectedLocation?.lat || 21.0285;
+    const lng = selectedLocation?.lng || 105.8542;
+    
+    // Create a small bounding box around the location for better zoom
+    const bbox = `${lng - 0.01},${lat - 0.01},${lng + 0.01},${lat + 0.01}`;
+    
+    return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lng}`;
   };
 
   return (
@@ -24,7 +35,7 @@ export default function Map() {
         {/* eslint-disable jsx-a11y/iframe-has-title */}
         <iframe
           title="OpenStreetMap interactive map displaying selected location"
-          src="https://www.openstreetmap.org/export/embed.html?bbox=105.7442,20.9785,105.9642,21.0785&layer=mapnik&marker=21.0285,105.8542"
+          src={getMapUrl()}
           className="map-full"
           style={{ width: '100%', height: '100vh', border: 'none' }}
           allowFullScreen

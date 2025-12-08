@@ -2,6 +2,15 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext(null);
 
+// --- Hàm fix lỗi UTF-8 sai khi lấy từ Google ---
+function normalizeString(str) {
+  try {
+    return decodeURIComponent(escape(str));
+  } catch {
+    return str;
+  }
+}
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -11,7 +20,13 @@ export const AuthProvider = ({ children }) => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       try {
-        const parsedUser = JSON.parse(storedUser);
+        let parsedUser = JSON.parse(storedUser);
+
+        // Fix lỗi encoding nếu có tên
+        if (parsedUser.name) {
+          parsedUser.name = normalizeString(parsedUser.name);
+        }
+
         setUser(parsedUser);
       } catch (error) {
         console.error('Error parsing user:', error);
@@ -21,64 +36,75 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  // Hàm kiểm tra tính hợp lệ của token (dựa trên thời gian 24 giờ)
+  // --- Kiểm tra token 24h ---
   const isTokenValid = (user) => {
     if (!user?.timestamp) return false;
-    // Tính tuổi token theo giờ
-    const tokenAge = (new Date() - new Date(user.timestamp)) / (1000 * 60 * 60); 
+    const tokenAge = (new Date() - new Date(user.timestamp)) / (1000 * 60 * 60);
     return tokenAge < 24;
   };
 
-  // Hàm login đã được sửa đổi
+  // --- Login tài khoản TEST ---
   const login = (email, password) => {
     const TEST_EMAIL = 'test@example.com';
     const TEST_PASSWORD = '123456';
 
-    // 🔑 Bước 1: Kiểm tra tài khoản test
     if (email === TEST_EMAIL && password === TEST_PASSWORD) {
-      // 🔑 Bước 2: Tạo đối tượng người dùng mô phỏng cho tài khoản test
       const mockUser = {
         email,
-        name: email.split('@')[0], // name là 'test'
+        name: email.split('@')[0],
         token: 'mock-test-token',
-        timestamp: new Date().toISOString(), // Dùng để kiểm tra thời gian hết hạn
+        timestamp: new Date().toISOString(),
       };
-      
-      // 🔑 Bước 3: Lưu và thiết lập trạng thái
+
       setUser(mockUser);
       localStorage.setItem('user', JSON.stringify(mockUser));
-      return true; // Đăng nhập thành công
+      return true;
     }
-    
-    // Nếu không phải tài khoản test, bạn có thể thêm logic gọi API ở đây.
-    // Hiện tại, tôi sẽ trả về false cho bất kỳ tài khoản nào khác.
-    console.warn('Đăng nhập thất bại: Tài khoản hoặc mật khẩu không hợp lệ.');
-    return false; // Đăng nhập thất bại
+
+    return false; // login fail
   };
 
-  // Hàm logout đã sẵn sàng và hoạt động tốt
+  // --- Authenticate dùng cho Google Login ---
+  const authenticate = (userObj) => {
+    if (!userObj) return;
+
+    const fixedUser = {
+      ...userObj,
+      name: normalizeString(userObj.name || ''),
+      timestamp: new Date().toISOString(),
+    };
+
+    setUser(fixedUser);
+    try {
+      localStorage.setItem('user', JSON.stringify(fixedUser));
+    } catch (e) {
+      console.error('Failed to save user to localStorage', e);
+    }
+  };
+
+  // --- Logout ---
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
   };
 
-  // Tự động logout nếu token hết hạn (sau 24 giờ)
+  // --- Auto logout nếu token hết hạn ---
   useEffect(() => {
     if (user && !isTokenValid(user)) {
-      console.log('Token hết hạn, tự động đăng xuất.');
+      console.debug('Token expired → auto logout');
       logout();
     }
-  }, [user]); // Bổ sung [user] vào dependency array
+  }, [user]);
 
-  // 📦 Cung cấp context
   return (
     <AuthContext.Provider
       value={{
         user,
         loading,
         login,
+        authenticate,
         logout,
-        isAuthenticated: !!user && isTokenValid(user), // Kiểm tra cả user tồn tại VÀ token còn hiệu lực
+        isAuthenticated: !!user && isTokenValid(user),
       }}
     >
       {children}
@@ -87,7 +113,7 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
 };

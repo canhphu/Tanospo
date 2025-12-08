@@ -621,6 +621,20 @@
   color: #2d3748;
 }
 
+.map-legend {
+  display: flex;
+  gap: 15px;
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #4a5568;
+}
+
 .distance-text {
   font-size: 14px;
   color: #4a5568;
