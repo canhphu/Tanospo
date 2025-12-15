@@ -17,7 +17,8 @@ export default function Sports() {
 
   const handleNext = () => {
     if (selected) {
-      navigate('/weather');
+      // Pass the selected sport ID to the Weather component
+      navigate('/weather', { state: { sportId: selected } });
     } else {
       alert('スポーツを選択してください');
     }
