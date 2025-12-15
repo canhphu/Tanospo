@@ -1,10 +1,8 @@
 import React, { useState } from "react";
-import { GoogleLogin } from 'react-google-login';
+import { GoogleLogin } from '@react-oauth/google';
 import { useNavigate } from "react-router-dom";
 import { useAuth } from '../context/AuthContext';
 import "../styles/Login.css";
-
-const clientId = 'YOUR_GOOGLE_CLIENT_ID';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -13,7 +11,7 @@ export default function Login() {
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [resetSuccess, setResetSuccess] = useState(false);
-  const { login } = useAuth();
+  const { login, authenticate } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -36,16 +34,33 @@ export default function Login() {
     }
   };
 
-  const handleGoogleSuccess = (response) => {
-    console.log('Google login success:', response.profileObj);
-    // Handle Google login success
-    const user = {
-      email: response.profileObj.email,
-      name: response.profileObj.name,
-      token: response.tokenId
-    };
-    localStorage.setItem('user', JSON.stringify(user));
-    navigate('/dashboard');
+  const handleGoogleSuccess = async (credentialResponse) => {
+    console.log('Google success response:', credentialResponse);
+    
+    // Decode the JWT credential
+    const credential = credentialResponse?.credential;
+    if (credential) {
+      try {
+        const payload = JSON.parse(atob(credential.split('.')[1]));
+        const user = {
+          email: payload?.email,
+          name: payload?.name || payload?.given_name || 'Google User',
+          token: credential,
+          timestamp: new Date().toISOString()
+        };
+        authenticate(user);
+        navigate('/dashboard');
+        return;
+      } catch (err) {
+        console.error('Error decoding credential:', err);
+        setError('Google login succeeded but failed to decode credential.');
+        return;
+      }
+    }
+
+    const debug = JSON.stringify(credentialResponse || {}, null, 2);
+    setError('Google login failed. No credential returned. Debug: ' + debug);
+    console.warn('No credential in Google response:', credentialResponse);
   };
 
   const handleGoogleFailure = (error) => {
@@ -128,26 +143,16 @@ export default function Login() {
 
         <div className="divider">または</div>
 
-        <GoogleLogin
-          clientId={clientId}
-          buttonText="Googleでログイン"
-          onSuccess={handleGoogleSuccess}
-          onFailure={handleGoogleFailure}
-          cookiePolicy={'single_host_origin'}
-          render={renderProps => (
-            <button 
-              className="btn-google" 
-              onClick={renderProps.onClick} 
-              disabled={renderProps.disabled}
-            >
-              <img
-                src="https://www.svgrepo.com/show/355037/google.svg"
-                alt="google"
-              />
-              Googleでログイン
-            </button>
-          )}
-        />
+        <div className="custom-google">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={handleGoogleFailure}
+            text="signin_with"
+            theme="outline"
+            size="large"
+            logo_alignment="left"
+          />
+        </div>
 
         <p className="register">
           まだアカウントがありません？

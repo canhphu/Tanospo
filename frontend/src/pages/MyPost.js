@@ -5,57 +5,35 @@ import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { getAllPosts } from "../lib/posts";
 import "../styles/Dashboard.css";
 
-const UserDropdown = ({ onLogout, onGoToProfile }) => {
-  return (
-    <div className="user-dropdown">
-      <button className="dropdown-item" onClick={onGoToProfile}>
-        👤 Profile
-      </button>
-      <button className="dropdown-item logout-item" onClick={onLogout}>
-        ➡️ Logout
-      </button>
-    </div>
-  );
-};
-
-export default function Dashboard() {
+export default function MyPost() {
   const navigate = useNavigate();
-  const { logout, user } = useAuth();
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const { user } = useAuth();
   const [likedPosts, setLikedPosts] = useState(new Set());
   const [comments, setComments] = useState({});
   const [newComments, setNewComments] = useState({});
   const [showCommentModal, setShowCommentModal] = useState(null);
-  const posts = getAllPosts();
+  const [myPosts, setMyPosts] = useState([]);
 
   useEffect(() => {
-    // Load liked posts from localStorage
+    // Load posts and liked posts from localStorage
+    const allPosts = getAllPosts();
+    
     const savedLikedPosts = localStorage.getItem('likedPosts');
     if (savedLikedPosts) {
       setLikedPosts(new Set(JSON.parse(savedLikedPosts)));
     }
-  }, []);
 
-  useEffect(() => {
-    // Save liked posts to localStorage
-    localStorage.setItem('likedPosts', JSON.stringify(Array.from(likedPosts)));
-  }, [likedPosts]);
-
-  const toggleDropdown = () => {
-    setIsDropdownOpen(prev => !prev);
-  };
-
-  const handleLogout = () => {
-    alert("Đang đăng xuất...");
-    logout();
-    navigate('/login'); 
-    setIsDropdownOpen(false); 
-  };
-
-  const handleGoToProfile = () => {
-    navigate('/profile'); 
-    setIsDropdownOpen(false); 
-  };
+    // Filter posts that belong to current user
+    // For now, we'll simulate user posts by matching with user email/name
+    const userPosts = allPosts.filter(post => {
+      // This is a simple simulation - in a real app, you'd have a userId field
+      const userName = user?.name?.toLowerCase() || user?.email?.split('@')[0]?.toLowerCase();
+      const postAuthorName = post.author.name.toLowerCase();
+      return postAuthorName === userName;
+    });
+    
+    setMyPosts(userPosts);
+  }, [user]);
 
   const toggleLike = (postId) => {
     const newLikedPosts = new Set(likedPosts);
@@ -65,6 +43,7 @@ export default function Dashboard() {
       newLikedPosts.add(postId);
     }
     setLikedPosts(newLikedPosts);
+    localStorage.setItem('likedPosts', JSON.stringify([...newLikedPosts]));
   };
 
   const handleComment = (postId) => {
@@ -104,69 +83,85 @@ export default function Dashboard() {
     }));
   };
 
+  const handleCreatePost = () => {
+    navigate('/post');
+  };
+
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
         <div className="user-info">
-          <img
-            src="https://picsum.photos/seed/avatar123/48/48.jpg"
-            alt="User avatar"
-            className="avatar"
-            onClick={toggleDropdown}
-          />
-          <span className="welcome-text">
-            {`${user?.name || (user?.email ? user.email.split('@')[0] : 'ゲスト')}さん、おはよう！頑張って先輩できるように練習を始めましょう。`}
-          </span>
-          {isDropdownOpen && (
-            <UserDropdown 
-              onLogout={handleLogout} 
-              onGoToProfile={handleGoToProfile} 
-            />
-          )}
+          <button 
+            className="back-btn" 
+            onClick={() => navigate('/profile')}
+            style={{ 
+              background: 'none', 
+              border: 'none', 
+              fontSize: '20px', 
+              cursor: 'pointer',
+              marginRight: '10px'
+            }}
+          >
+            ←
+          </button>
+          <span className="welcome-text">マイ投稿</span>
         </div>
         
-        <button className="start-btn" onClick={() => navigate('/sports')}>スタート</button>
+        <button className="start-btn" onClick={() => navigate('/dashboard')}>ダッシュボード</button>
       </header>
 
       <div className="review-section">
-        <button className="write-btn" onClick={() => navigate('/post')}>レビューを書く</button>
 
-        {posts.map(post => (
-          <div key={post.id} className="review-card">
-            <div className="review-content">
-              <div className="review-header">
-                <img
-                  src={post.author.avatar}
-                  alt={post.author.name}
-                  className="review-avatar"
-                />
-                <span className="review-name">{post.author.name} - {post.author.location}</span>
-              </div>
-              <p className="review-text">{post.content}</p>
-              <div className="review-actions">
-                {likedPosts.has(post.id) ? (
-                  <FaHeart 
-                    className="heart liked"
-                    onClick={() => toggleLike(post.id)}
-                  />
-                ) : (
-                  <FaRegHeart 
-                    className="heart"
-                    onClick={() => toggleLike(post.id)}
-                  />
-                )}
-                <button className="comment-btn" onClick={() => handleComment(post.id)}>Comment</button>
-              </div>
-            </div>
-            <div className="review-image-wrapper">
-              <img
-                src={post.image.src}
-                alt={post.image.alt}
-                className="review-image"
-              />
-            </div>
+        {myPosts.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '60px 20px', color: '#9ca3af' }}>
+            <h3>まだ投稿がありません</h3>
+            <p>新しい投稿を作成して、あなたの活動をシェアしましょう！</p>
+            <button 
+              className="write-btn" 
+              onClick={handleCreatePost}
+              style={{ marginTop: '20px' }}
+            >
+              新しい投稿を作成
+            </button>
           </div>
-        ))}
+        ) : (
+          myPosts.map(post => (
+            <div key={post.id} className="review-card">
+              <div className="review-content">
+                <div className="review-header">
+                  <img
+                    src={post.author.avatar}
+                    alt={post.author.name}
+                    className="review-avatar"
+                  />
+                  <span className="review-name">{post.author.name} - {post.author.location}</span>
+                </div>
+                <p className="review-text">{post.content}</p>
+                <div className="review-actions">
+                  {likedPosts.has(post.id) ? (
+                    <FaHeart 
+                      className="heart liked"
+                      onClick={() => toggleLike(post.id)}
+                    />
+                  ) : (
+                    <FaRegHeart 
+                      className="heart"
+                      onClick={() => toggleLike(post.id)}
+                    />
+                  )}
+                  <button className="comment-btn" onClick={() => handleComment(post.id)}>Comment</button>
+                </div>
+              </div>
+              <div className="review-image-wrapper">
+                <img
+                  src={post.image.src}
+                  alt={post.image.alt}
+                  className="review-image"
+                />
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Comment Modal */}
