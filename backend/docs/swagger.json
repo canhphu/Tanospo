@@ -24,12 +24,13 @@
       "description": "Health check endpoints"
     },
     {
-      "name": "Users",
-      "description": "User management endpoints"
-    },
-    {
       "name": "Locations",
       "description": "Location search and management endpoints"
+    }
+    ,
+    {
+      "name": "Auth",
+      "description": "Authentication endpoints (login, register)"
     }
   ],
   "paths": {
@@ -56,79 +57,7 @@
         }
       }
     },
-    "/api/users": {
-      "post": {
-        "tags": ["Users"],
-        "summary": "Register a new user",
-        "description": "Create a new user account with optional home location",
-        "operationId": "registerUser",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterUserRequest"
-              },
-              "example": {
-                "name": "Yamada Taro",
-                "email": "yamada@example.com",
-                "language": "ja",
-                "homeLat": 21.0285,
-                "homeLng": 105.8542
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "User created successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/User"
-                },
-                "example": {
-                  "id": "123e4567-e89b-12d3-a456-426614174000",
-                  "name": "Yamada Taro",
-                  "email": "yamada@example.com",
-                  "language": "ja",
-                  "homeLocation": {
-                    "latitude": 21.0285,
-                    "longitude": 105.8542
-                  },
-                  "createdAt": "2024-01-15T10:30:00.000Z",
-                  "updatedAt": "2024-01-15T10:30:00.000Z"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request data",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                },
-                "example": {
-                  "error": "Validation failed",
-                  "message": "Email is required"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
+    
     "/api/locations/nearby": {
       "get": {
         "tags": ["Locations"],
@@ -243,6 +172,98 @@
         }
       }
     }
+    ,
+    "/api/auth/register": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Register (auth)",
+        "description": "Register a new user via auth route (alias to /api/users)",
+        "operationId": "authRegister",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterUserRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Login user",
+        "description": "Authenticate user and return a JWT token",
+        "operationId": "authLogin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              },
+              "example": {
+                "email": "yamada@example.com",
+                "password": "password123"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                },
+                "example": {
+                  "user": {
+                    "id": "123e4567-e89b-12d3-a456-426614174000",
+                    "name": "Yamada Taro",
+                    "email": "yamada@example.com",
+                    "language": "ja",
+                    "createdAt": "2024-01-15T10:30:00.000Z",
+                    "updatedAt": "2024-01-15T10:30:00.000Z"
+                  },
+                  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    }
   },
   "components": {
     "schemas": {
@@ -289,6 +310,11 @@
             "description": "User's email address",
             "example": "yamada@example.com"
           },
+          "password": {
+            "type": "string",
+            "description": "User password (will be hashed on server)",
+            "example": "password123"
+          },
           "language": {
             "type": "string",
             "default": "ja",
@@ -308,7 +334,7 @@
             "example": 105.8542
           }
         },
-        "required": ["name", "email"]
+        "required": ["name", "email", "password"]
       },
       "User": {
         "type": "object",
@@ -420,6 +446,37 @@
           }
         },
         "required": ["error"]
+      }
+      ,
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "yamada@example.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "User password",
+            "example": "password123"
+          }
+        },
+        "required": ["email", "password"]
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "token": {
+            "type": "string",
+            "description": "JWT token to be used in Authorization header",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          }
+        },
+        "required": ["user", "token"]
       }
     }
   }

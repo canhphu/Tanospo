@@ -1,4 +1,4 @@
-import { IUserRepository } from '../../domain/repositories/IUserRepository';
+import { IUserRepository, AuthUser } from '../../domain/repositories/IUserRepository'; 
 import { User } from '../../domain/entities/User';
 import { Coordinates } from '../../domain/valueObjects/Coordinates';
 import { withClient } from '../db';
@@ -15,6 +15,7 @@ interface DbUser {
   current_lng: number | null;
   created_at: Date;
   updated_at: Date;
+  password_hash: string ;
 }
 
 const mapUser = (row: DbUser): User =>
@@ -34,22 +35,31 @@ const mapUser = (row: DbUser): User =>
         : undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    passwordHash: row.password_hash,
   });
+
 
 export class UserRepository implements IUserRepository {
   async findByEmail(email: string): Promise<User | null> {
     const row = await withClient(async client => {
-      const result = await client.query<DbUser>('SELECT * FROM users WHERE email = $1 LIMIT 1', [email]);
+      const result = await client.query<DbUser>(
+        'SELECT id, name, email, language, avatar_url, home_lat, home_lng, current_lat, current_lng, created_at, updated_at FROM users WHERE email = $1 LIMIT 1', 
+        [email]
+      );
       return result.rows[0];
     });
     return row ? mapUser(row) : null;
   }
 
+
+
   async findById(id: string): Promise<User | null> {
     const row = await withClient(async client => {
-      const result = await client.query<DbUser>('SELECT * FROM users WHERE id = $1 LIMIT 1', [id]);
-      return result.rows[0];
-    });
+     const result = await client.query<DbUser>(
+        'SELECT name, email, language, avatar_url, home_lat, home_lng, current_lat, current_lng, created_at, updated_at FROM users WHERE id = $1 LIMIT 1', 
+        [id]
+      );
+      return result.rows[0];});
     return row ? mapUser(row) : null;
   }
 
@@ -63,6 +73,7 @@ export class UserRepository implements IUserRepository {
         ON CONFLICT (id)
         DO UPDATE SET
           name = EXCLUDED.name,
+          password_hash = EXCLUDED.password_hash,
           email = EXCLUDED.email,
           language = EXCLUDED.language,
           avatar_url = EXCLUDED.avatar_url,
@@ -80,6 +91,7 @@ export class UserRepository implements IUserRepository {
           data.homeLocation?.longitude ?? null,
           data.createdAt,
           data.updatedAt,
+          data.passwordHash,
         ],
       );
       return result.rows[0];

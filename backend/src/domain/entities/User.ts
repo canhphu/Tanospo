@@ -10,6 +10,7 @@ export interface UserProps {
   avatarUrl?: string;
   createdAt: Date;
   updatedAt: Date;
+  passwordHash : string;
 }
 
 export class User {
