@@ -1,0 +1,484 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Tanospo API",
+    "description": "API documentation for Tanospo - Exercise location finder and workout video recommendation platform",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Tanospo Team"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development server"
+    },
+    {
+      "url": "https://api.tanospo.com",
+      "description": "Production server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Health check endpoints"
+    },
+    {
+      "name": "Locations",
+      "description": "Location search and management endpoints"
+    }
+    ,
+    {
+      "name": "Auth",
+      "description": "Authentication endpoints (login, register)"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Health check",
+        "description": "Check if the API is running",
+        "operationId": "healthCheck",
+        "responses": {
+          "200": {
+            "description": "API is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                },
+                "example": {
+                  "status": "ok"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    
+    "/api/locations/nearby": {
+      "get": {
+        "tags": ["Locations"],
+        "summary": "Get nearby locations",
+        "description": "Find exercise locations within a specified radius. Can use either user ID or explicit coordinates.",
+        "operationId": "getNearbyLocations",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "description": "User ID to get location from (uses user's current or home location)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "123e4567-e89b-12d3-a456-426614174000"
+          },
+          {
+            "name": "lat",
+            "in": "query",
+            "description": "Latitude (required if userId not provided)",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "minimum": -90,
+              "maximum": 90
+            },
+            "example": 21.0285
+          },
+          {
+            "name": "lng",
+            "in": "query",
+            "description": "Longitude (required if userId not provided)",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "minimum": -180,
+              "maximum": 180
+            },
+            "example": 105.8542
+          },
+          {
+            "name": "radius",
+            "in": "query",
+            "description": "Search radius in meters",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "default": 2000,
+              "minimum": 100,
+              "maximum": 50000
+            },
+            "example": 2000
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of nearby locations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Location"
+                  }
+                },
+                "example": [
+                  {
+                    "id": "456e7890-e89b-12d3-a456-426614174001",
+                    "name": "Hoan Kiem Lake Park",
+                    "address": "Hoan Kiem District, Hanoi",
+                    "coordinates": {
+                      "latitude": 21.0285,
+                      "longitude": 105.8542
+                    },
+                    "type": "park",
+                    "amenities": ["walking_path", "benches", "restroom"],
+                    "imageUrl": "https://example.com/park.jpg",
+                    "createdAt": "2024-01-10T08:00:00.000Z"
+                  }
+                ]
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "error": "Unable to resolve coordinates",
+                  "message": "Either userId or lat/lng must be provided"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    ,
+    "/api/auth/register": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Register (auth)",
+        "description": "Register a new user via auth route (alias to /api/users)",
+        "operationId": "authRegister",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterUserRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Login user",
+        "description": "Authenticate user and return a JWT token",
+        "operationId": "authLogin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              },
+              "example": {
+                "email": "yamada@example.com",
+                "password": "password123"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                },
+                "example": {
+                  "user": {
+                    "id": "123e4567-e89b-12d3-a456-426614174000",
+                    "name": "Yamada Taro",
+                    "email": "yamada@example.com",
+                    "language": "ja",
+                    "createdAt": "2024-01-15T10:30:00.000Z",
+                    "updatedAt": "2024-01-15T10:30:00.000Z"
+                  },
+                  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "ok"
+          }
+        },
+        "required": ["status"]
+      },
+      "Coordinates": {
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "description": "Latitude coordinate",
+            "example": 21.0285
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "description": "Longitude coordinate",
+            "example": 105.8542
+          }
+        },
+        "required": ["latitude", "longitude"]
+      },
+      "RegisterUserRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "description": "User's full name",
+            "example": "Yamada Taro"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "User's email address",
+            "example": "yamada@example.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "User password (will be hashed on server)",
+            "example": "password123"
+          },
+          "language": {
+            "type": "string",
+            "default": "ja",
+            "description": "Preferred language code (ISO 639-1)",
+            "example": "ja"
+          },
+          "homeLat": {
+            "type": "number",
+            "format": "double",
+            "description": "Home location latitude",
+            "example": 21.0285
+          },
+          "homeLng": {
+            "type": "number",
+            "format": "double",
+            "description": "Home location longitude",
+            "example": 105.8542
+          }
+        },
+        "required": ["name", "email", "password"]
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique user identifier"
+          },
+          "name": {
+            "type": "string",
+            "description": "User's full name"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "User's email address"
+          },
+          "language": {
+            "type": "string",
+            "description": "Preferred language code",
+            "example": "ja"
+          },
+          "homeLocation": {
+            "$ref": "#/components/schemas/Coordinates",
+            "description": "User's home location coordinates"
+          },
+          "currentLocation": {
+            "$ref": "#/components/schemas/Coordinates",
+            "description": "User's current location coordinates (from GPS)"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL to user's avatar image",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Account creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp"
+          }
+        },
+        "required": ["id", "name", "email", "language", "createdAt", "updatedAt"]
+      },
+      "Location": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique location identifier"
+          },
+          "name": {
+            "type": "string",
+            "description": "Location name"
+          },
+          "address": {
+            "type": "string",
+            "description": "Full address of the location",
+            "nullable": true
+          },
+          "coordinates": {
+            "$ref": "#/components/schemas/Coordinates",
+            "description": "Location coordinates"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["park", "gym", "trail", "other"],
+            "description": "Type of exercise location"
+          },
+          "amenities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "List of available amenities",
+            "example": ["walking_path", "benches", "restroom"]
+          },
+          "imageUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL to location image",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Location creation timestamp"
+          }
+        },
+        "required": ["id", "name", "coordinates", "type", "amenities", "createdAt"]
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error type or code"
+          },
+          "message": {
+            "type": "string",
+            "description": "Detailed error message"
+          }
+        },
+        "required": ["error"]
+      }
+      ,
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "yamada@example.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "User password",
+            "example": "password123"
+          }
+        },
+        "required": ["email", "password"]
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "token": {
+            "type": "string",
+            "description": "JWT token to be used in Authorization header",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          }
+        },
+        "required": ["user", "token"]
+      }
+    }
+  }
+}
+
