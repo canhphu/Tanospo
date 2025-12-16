@@ -51,12 +51,12 @@ Sau đó truy cập: `http://localhost:8080`
 
 #### Health Check
 ```bash
-curl http://localhost:3000/health
+curl http://localhost:5000/health
 ```
 
 #### Register User
 ```bash
-curl -X POST http://localhost:3000/api/users \
+curl -X POST http://localhost:5000/api/users \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Yamada Taro",
@@ -70,10 +70,10 @@ curl -X POST http://localhost:3000/api/users \
 #### Get Nearby Locations
 ```bash
 # Sử dụng coordinates
-curl "http://localhost:3000/api/locations/nearby?lat=21.0285&lng=105.8542&radius=2000"
+curl "http://localhost:5000/api/locations/nearby?lat=21.0285&lng=105.8542&radius=2000"
 
 # Sử dụng userId
-curl "http://localhost:3000/api/locations/nearby?userId=123e4567-e89b-12d3-a456-426614174000"
+curl "http://localhost:5000/api/locations/nearby?userId=123e4567-e89b-12d3-a456-426614174000"
 ```
 
 ### Lưu ý

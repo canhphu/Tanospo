@@ -1,20 +1,25 @@
-import { Pool } from 'pg';
+import { MongoClient, Db } from 'mongodb';
 import { env } from '../config/env';
 
-export const pool = new Pool({
-  host: env.db.host,
-  port: env.db.port,
-  user: env.db.user,
-  password: env.db.password,
-  database: env.db.database,
-});
+let client: MongoClient | null = null;
+let db: Db | null = null;
 
-export const withClient = async <T>(fn: (client: Pool['client']) => Promise<T>): Promise<T> => {
-  const client = await pool.connect();
-  try {
-    return await fn(client);
-  } finally {
-    client.release();
+export const getDb = async (): Promise<Db> => {
+  if (db) return db;
+  if (!env.mongo.uri) {
+    throw new Error('Missing MONGO_URI');
+  }
+  client = new MongoClient(env.mongo.uri);
+  await client.connect();
+  db = client.db(env.mongo.dbName);
+  return db;
+};
+
+export const closeDb = async () => {
+  if (client) {
+    await client.close();
+    client = null;
+    db = null;
   }
 };
 

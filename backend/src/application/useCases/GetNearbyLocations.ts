@@ -5,7 +5,7 @@ import { Coordinates } from '../../domain/valueObjects/Coordinates';
 import { z } from 'zod';
 
 const schema = z.object({
-  userId: z.string().uuid().optional(),
+  userId: z.string().optional(), // Accepts both UUID and MongoDB ObjectId
   latitude: z.number().optional(),
   longitude: z.number().optional(),
   radiusMeters: z.number().default(2000),

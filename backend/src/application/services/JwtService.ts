@@ -20,4 +20,8 @@ export class JwtService {
   generateToken(payload: TokenPayload): string {
     return jwt.sign(payload, this.secret, { expiresIn: this.expiresIn });
   }
+
+  verifyToken(token: string): TokenPayload {
+    return jwt.verify(token, this.secret) as TokenPayload;
+  }
 }

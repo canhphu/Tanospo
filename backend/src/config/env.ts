@@ -30,13 +30,10 @@ const requireEnv = (value: string | undefined, key: string): string => {
 
 export const env = {
   nodeEnv,
-  port: Number(process.env.PORT ?? 3000),
-  db: {
-    host: requireEnv(process.env.DB_HOST, 'DB_HOST'),
-    port: Number(process.env.DB_PORT ?? 5432),
-    user: requireEnv(process.env.DB_USER, 'DB_USER'),
-    password: requireEnv(process.env.DB_PASSWORD, 'DB_PASSWORD'),
-    database: requireEnv(process.env.DB_NAME, 'DB_NAME'),
+  port: Number(process.env.PORT ?? 5000),
+  mongo: {
+    uri: requireEnv(process.env.MONGO_URI, 'MONGO_URI'),
+    dbName: process.env.MONGO_DB ?? 'tanospo',
   },
   googleMaps: {
     apiKey: requireEnv(process.env.GMAPS_KEY, 'GMAPS_KEY'),
@@ -45,4 +42,3 @@ export const env = {
   weatherApiKey: requireEnv(process.env.OPENWEATHER_KEY, 'OPENWEATHER_KEY'),
   jwtSecret: requireEnv(process.env.JWT_SECRET, 'JWT_SECRET'),
 };
-
