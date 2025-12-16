@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { GoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from "react-router-dom";
 import { useAuth } from '../context/AuthContext';
 import "../styles/Login.css";
@@ -41,7 +42,7 @@ export default function Login() {
     const credential = credentialResponse?.credential;
     if (credential) {
       try {
-        const payload = JSON.parse(atob(credential.split('.')[1]));
+        const payload = jwtDecode(credential);
         const user = {
           email: payload?.email,
           name: payload?.name || payload?.given_name || 'Google User',

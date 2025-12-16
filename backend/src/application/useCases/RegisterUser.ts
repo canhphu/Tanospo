@@ -1,15 +1,13 @@
 import { inject, injectable } from 'tsyringe';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import { User } from '../../domain/entities/User';
-import { Coordinates } from '../../domain/valueObjects/Coordinates';
 import { z } from 'zod';
-import { randomUUID } from 'crypto';
 import bcrypt from 'bcrypt';
 
 const schema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
-  password: z.string().min(6, 'Password must be at least 6 characters'), 
+  password: z.string().min(6, 'Password must be at least 6 characters'),
   language: z.string().default('ja'),
   homeLat: z.number().optional(),
   homeLng: z.number().optional(),
@@ -35,18 +33,17 @@ export class RegisterUser {
     // 2. Mã hoá mật khẩu
     const newPasswordHash = await bcrypt.hash(data.password, this.saltRounds);
 
+    const now = new Date();
     const user = new User({
-      id: randomUUID(),
       name: data.name,
       email: data.email,
       language: data.language,
-      homeLocation:
-        data.homeLat !== undefined && data.homeLng !== undefined
-          ? new Coordinates(data.homeLat, data.homeLng)
-          : undefined,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      passwordHash: newPasswordHash
+      passwordHash: newPasswordHash,
+      homeLat: data.homeLat,
+      homeLng: data.homeLng,
+      role: 'user',
+      createdAt: now,
+      updatedAt: now,
     });
     
     // 3. Lưu người dùng cùng với hash mật khẩu
