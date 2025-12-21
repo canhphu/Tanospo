@@ -1,58 +1,53 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { locations } from "../lib/locationsData";
-import { getCommentsByLocationId, addComment } from "../lib/comments";
-import "../styles/LocationDetailPage.css";
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { locations } from '../lib/locationsData';
+import { getAllPosts } from '../lib/posts';
+import '../styles/LocationDetailPage.css';
 
 export default function LocationDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const locationState = useLocation();
   const [location, setLocation] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [comments, setComments] = useState([]);
-
-  const [newComment, setNewComment] = useState({
-    content: "",
-    rating: 5
-  });
+  const [posts, setPosts] = useState([]);
 
   useEffect(() => {
-    const locationId = parseInt(id);
-    const foundLocation = locations.find(loc => loc.id === locationId);
+    let foundLocation = null;
+    let locationId = null;
+    
+    if (locationState.state?.location) {
+      foundLocation = locationState.state.location;
+      locationId = foundLocation.id;
+    } else if (id) {
+      locationId = parseInt(id);
+      foundLocation = locations.find(loc => loc.id === locationId);
+    }
+    
     setLocation(foundLocation);
     
-    // Load comments for this location
-    const locationComments = getCommentsByLocationId(locationId);
-    setComments(locationComments);
+    if (foundLocation) {
+      const allPosts = getAllPosts();
+      // Filter posts that mention this location or are from this location
+      const locationPosts = allPosts.filter(post => 
+        post.author.location.includes(foundLocation.name) || 
+        post.content.includes(foundLocation.name)
+      );
+      setPosts(locationPosts);
+    }
     
     setLoading(false);
-  }, [id]);
+  }, [id, locationState.state]);
 
   const handleBack = () => {
     navigate(-1);
   };
 
-  const handleAddComment = () => {
-    if (newComment.content && location) {
-      const commentData = {
-        locationId: location.id,
-        author: "自分",
-        rating: 5,
-        content: newComment.content
-      };
-      const addedComment = addComment(commentData);
-      setComments([addedComment, ...comments]);
-      setNewComment({ content: "" });
-    }
-  };
-
-  const handleReadReviews = () => {
-    // Scroll to comments section
-    document.getElementById('comments-section').scrollIntoView({ behavior: 'smooth' });
+  const handleReadPosts = () => {
+    document.getElementById('posts-section').scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleViewOnGoogleMaps = () => {
-    // Navigate to Map page with location data
     if (location) {
       navigate('/map', { state: { location } });
     } else {
@@ -61,122 +56,96 @@ export default function LocationDetailPage() {
   };
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return <div className="loading">読み込み中...</div>;
   }
 
   if (!location) {
-    return <div className="error">Location not found</div>;
+    return <div className="error">場所が見つかりません</div>;
   }
 
   return (
-    <div className="location-detail-container">
-      {/* Header Image */}
+    <div className="location-detail">
       <div className="location-header">
-        <button className="back-button" onClick={handleBack}>
-          ← 戻る
+        <button onClick={handleBack} className="back-button">
+          &larr; 戻る
         </button>
-        <img 
-          src={location.image || "/bike-shop-placeholder.jpg"} 
-          alt={location.name}
-          className="location-image"
-        />
+        <h1>{location.name}</h1>
       </div>
 
-      {/* Location Info */}
-      <div className="location-info">
-        <h1 className="location-name">{location.name}</h1>
+      <div className="location-content">
+        <div className="location-image">
+          <img src={location.image} alt={location.name} />
+        </div>
         
-        <div className="location-details">
-          <div className="detail-item">
-            <span className="detail-icon"></span>
-            <span className="detail-text">{location.address}</span>
-          </div>
+        <div className="location-info">
+          <p className="location-description">{location.description}</p>
           
-          <div className="detail-item">
-            <span className="detail-icon"></span>
-            <span className="detail-text">営業時間: {location.openTime}</span>
-          </div>
-          
-          <div className="detail-item">
-            <span className="detail-icon"></span>
-            <span className="detail-text">評価: {location.rating}/5.0</span>
-          </div>
-          
-          {location.facilities && location.facilities.length > 0 && (
-            <div className="detail-item facilities">
-              <span className="detail-icon"></span>
-              <div className="facilities-list">
-                {location.facilities.map((facility, index) => (
-                  <span key={index} className="facility-tag">{facility}</span>
-                ))}
-              </div>
+          <div className="location-meta">
+            <div className="meta-item">
+              <span className="meta-label">住所:</span>
+              <span className="meta-value">{location.address}</span>
             </div>
-          )}
+            <div className="meta-item">
+              <span className="meta-label">営業時間:</span>
+              <span className="meta-value">{location.hours || '情報なし'}</span>
+            </div>
+            <div className="meta-item">
+              <span className="meta-label">アクセス:</span>
+              <span className="meta-value">{location.access || '情報なし'}</span>
+            </div>
+          </div>
         </div>
 
         {/* Action Buttons */}
         <div className="action-buttons">
-          <button className="btn-review" onClick={handleReadReviews}>
-            場所についてのレビューを読む
+          <button className="btn-review" onClick={handleReadPosts}>
+            この場所の投稿を見る
           </button>
           <button className="btn-maps" onClick={handleViewOnGoogleMaps}>
-            Googleマップでレビューを見る
+           マップで見る
           </button>
         </div>
       </div>
 
-      {/* Comments Section */}
-      <div id="comments-section" className="comments-section">
-        <h2 className="comments-title">レビュー</h2>
+      {/* Posts Section */}
+      <div id="posts-section" className="posts-section">
+        <h2 className="posts-title">この場所の投稿</h2>
         
-        {/* Add Comment Form */}
-        <div className="add-comment">
-          <h3>レビューを追加</h3>
-          <div className="comment-form">
-                        
-            <div className="rating-input">
-              <label>評価:</label>
-              <select
-                value={newComment.rating}
-                onChange={(e) => setNewComment({...newComment, rating: parseInt(e.target.value)})}
-                className="rating-select"
-              >
-                <option value={5}>⭐⭐⭐⭐⭐</option>
-                <option value={4}>⭐⭐⭐⭐</option>
-                <option value={3}>⭐⭐⭐</option>
-                <option value={2}>⭐⭐</option>
-                <option value={1}>⭐</option>
-              </select>
-            </div>
-            
-            <textarea
-              placeholder="レビューを書いてください..."
-              value={newComment.content}
-              onChange={(e) => setNewComment({...newComment, content: e.target.value})}
-              className="comment-textarea"
-            />
-            
-            <button onClick={handleAddComment} className="btn-submit-comment">
-              レビューを投稿
-            </button>
+        {posts.length > 0 ? (
+          <div className="posts-list">
+            {posts.map(post => (
+              <div key={post.id} className="post-item">
+                <div className="post-header">
+                  <img 
+                    src={post.author.avatar} 
+                    alt={post.author.name} 
+                    className="post-avatar"
+                  />
+                  <div className="post-author">
+                    <span className="author-name">{post.author.name}</span>
+                    <span className="post-location">{post.author.location}</span>
+                  </div>
+                </div>
+                <p className="post-content">{post.content}</p>
+                {post.image && (
+                  <img 
+                    src={post.image.src} 
+                    alt={post.image.alt} 
+                    className="post-image"
+                  />
+                )}
+                <div className="post-footer">
+                  <span className="post-likes">❤️ {post.likes} いいね</span>
+                  <span className="post-time">
+                    {new Date(post.timestamp).toLocaleString('ja-JP')}
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-
-        {/* Comments List */}
-        <div className="comments-list">
-          {comments.map(comment => (
-            <div key={comment.id} className="comment-item">
-              <div className="comment-header">
-                <span className="comment-author">{comment.author}</span>
-                <span className="comment-date">{comment.date}</span>
-              </div>
-              <div className="comment-rating">
-                {'⭐'.repeat(comment.rating)}
-              </div>
-              <div className="comment-content">{comment.content}</div>
-            </div>
-          ))}
-        </div>
+        ) : (
+          <p className="no-posts">この場所に関する投稿はまだありません</p>
+        )}
       </div>
     </div>
   );

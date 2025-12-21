@@ -1,0 +1,59 @@
+/* Video History Page Styles */
+.video-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.clear-history-btn {
+  background: #ff4d4f;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.clear-history-btn:hover {
+  background: #ff7875;
+}
+
+.video-icon {
+  width: 40px;
+  height: 40px;
+  background-color: #f0f2f5;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+}
+
+.video-meta {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.video-meta .clock-icon {
+  margin-right: 4px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #9ca3af;
+}
+
+.empty-state h3 {
+  margin-bottom: 12px;
+  color: #6b7280;
+}
+
+.empty-state p {
+  font-size: 14px;
+}

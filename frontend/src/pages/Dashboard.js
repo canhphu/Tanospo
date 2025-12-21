@@ -9,10 +9,10 @@ const UserDropdown = ({ onLogout, onGoToProfile }) => {
   return (
     <div className="user-dropdown">
       <button className="dropdown-item" onClick={onGoToProfile}>
-        👤 Profile
+        Profile
       </button>
       <button className="dropdown-item logout-item" onClick={onLogout}>
-        ➡️ Logout
+        Logout
       </button>
     </div>
   );

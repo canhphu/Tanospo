@@ -15,6 +15,9 @@ import Profile from './pages/Profile';
 import LocationDetailPage from './pages/LocationDetailPage';
 import Favorite from './pages/Favorite';
 import MyPost from './pages/MyPost';
+import VideoHistory from './pages/VideoHistory';
+import VideoPage from './pages/VideoPages';
+import VideoReview from './pages/VideoReview';
 
 // Route Components
 const ProtectedRoute = ({ children }) => {
@@ -61,8 +64,12 @@ function App() {
             <Route path="/post" element={<ProtectedRoute><PostPage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/location/:id" element={<ProtectedRoute><LocationDetailPage /></ProtectedRoute>} />
+            <Route path="/location-detail" element={<ProtectedRoute><LocationDetailPage /></ProtectedRoute>} />
             <Route path="/favorites" element={<ProtectedRoute><Favorite /></ProtectedRoute>} /> 
             <Route path="/my-posts" element={<ProtectedRoute><MyPost /></ProtectedRoute>} />
+            <Route path="/video-history" element={<ProtectedRoute><VideoHistory /></ProtectedRoute>} />
+            <Route path="/video-page" element={<ProtectedRoute><VideoPage /></ProtectedRoute>} />
+            <Route path="/video-review" element={<ProtectedRoute><VideoReview /></ProtectedRoute>} />
             {/* Default Route */}
             <Route path="/" element={<Navigate to="/login" replace />} />
           </Routes>

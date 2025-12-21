@@ -7,8 +7,8 @@ export default function Weather() {
   const navigate = useNavigate();
   const [weatherData, setWeatherData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedLocation, setSelectedLocation] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [selectedLocation] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [filteredLocations, setFilteredLocations] = useState([]);
   const [selectedSport, setSelectedSport] = useState('');
@@ -122,8 +122,9 @@ export default function Weather() {
     return distance;
   };
 
-  const handleLocationDetail = (loc) => {
-    navigate(`/location/${loc.id}`);
+
+  const handleModalClose = () => {
+    setShowModal(false);
   };
 
   return (
@@ -199,7 +200,7 @@ export default function Weather() {
 
               <div className="place">
                 <span className="distance">距離: {distanceText}</span>
-                <button className="btn" onClick={() => handleLocationDetail(loc)}>
+                <button className="btn" onClick={() => navigate('/location-detail', { state: { location: loc } })}>
                   場所の詳細を見る
               </button>
             </div>
@@ -222,11 +223,11 @@ export default function Weather() {
 
       {/* Modal */}
       {showModal && selectedLocation && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+        <div className="modal-overlay" onClick={handleModalClose}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2 className="modal-title">{selectedLocation.name}</h2>
-              <button className="modal-close" onClick={() => setShowModal(false)}>×</button>
+              <button className="modal-close" onClick={handleModalClose}>×</button>
             </div>
 
             <div className="modal-body">
