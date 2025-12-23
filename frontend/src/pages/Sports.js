@@ -17,8 +17,18 @@ export default function Sports() {
 
   const handleNext = () => {
     if (selected) {
-      // Pass the selected sport ID to the Weather component
-      navigate('/weather', { state: { sportId: selected } });
+      // For Yoga (ID: 5) and Gym (ID: 6), navigate to video page
+      if (selected === 5 || selected === 6) {
+        navigate('/video-page', { 
+          state: { 
+            sportId: selected,
+            sportName: sports.find(sport => sport.id === selected).name
+          } 
+        });
+      } else {
+        // For other sports, go to weather page as before
+        navigate('/weather', { state: { sportId: selected } });
+      }
     } else {
       alert('スポーツを選択してください');
     }

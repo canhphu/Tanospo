@@ -187,3 +187,29 @@
   background: #e0e0e0;
   border-color: #999;
 }
+/* Back Button in Top Bar */
+.top-bar {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0 15px;
+  color: #4d73ff;
+  position: absolute;
+  left: 0;
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.top-bar:hover {
+  color: #3a5bd9;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Adjust top-bar to support back button */
+.top-bar {
+  position: relative;
+  padding: 0 20px;
+  justify-content: flex-end;
+}

@@ -20,13 +20,18 @@ export default function ProfilePage() {
   const handleLogout = () => {
     logout();
   };
-
+  const handleVideoHistory = () => {
+    navigate('/video-history');
+  }
   const handleFavorites = () => {
     navigate('/favorites');
   };
 
   const handleMyPosts = () => {
     navigate('/my-posts');
+  };
+  const handleBack = () => {
+    navigate('/dashboard');
   };
 
   const handleEditDescription = () => {
@@ -66,6 +71,7 @@ export default function ProfilePage() {
     <div className="profile-container">
       {/* TOP BAR */}
       <div className="top-bar">
+        <button className="back-btn" onClick={handleBack}>←</button>
         <button className="logout-btn" onClick={handleLogout}>ログアウト</button>
       </div>
 
@@ -88,7 +94,7 @@ export default function ProfilePage() {
       {/* BUTTONS */}
       <div className="menu-buttons">
         <button className="btn btn-blue" onClick={handleMyPosts}>投稿</button>
-        <button className="btn btn-yellow">動画レビュー</button>
+        <button className="btn btn-yellow" onClick={handleVideoHistory}>動画レビュー</button>
         <button className="btn btn-red" onClick={handleFavorites}>お気に入り</button>
       </div>
 
