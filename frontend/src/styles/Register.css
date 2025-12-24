@@ -3,6 +3,16 @@
   height: 100vh;
   display: flex;
   font-family: sans-serif;
+  animation: containerFadeIn 0.6s ease;
+}
+
+@keyframes containerFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Left */
@@ -12,6 +22,18 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  animation: slideInLeft 0.8s ease;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .title {
@@ -37,6 +59,17 @@
   border: 1px solid #bbb;
   border-radius: 6px;
   outline: none;
+  transition: all 0.3s ease;
+}
+
+.input-group input:focus {
+  border-color: #7e8ef1;
+  box-shadow: 0 0 0 3px rgba(126, 142, 241, 0.1);
+  transform: translateY(-1px);
+}
+
+.input-group input:hover {
+  border-color: #999;
 }
 
 .btn-register {
@@ -48,10 +81,86 @@
   border-radius: 6px;
   cursor: pointer;
   margin-bottom: 15px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(126, 142, 241, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-register::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn-register:hover::before {
+  width: 400px;
+  height: 400px;
+}
+
+.btn-register:hover {
+  background: #6b7dd8;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(126, 142, 241, 0.4);
+}
+
+.btn-register:active {
+  transform: translateY(0);
 }
 
 /* Right */
 .right {
   width: 50%;
-  background: #c7d2fa;
+  background: linear-gradient(135deg, #c7d2fa 0%, #e0e7ff 100%);
+  animation: slideInRight 0.8s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 968px) {
+  .register-container {
+    flex-direction: column;
+  }
+  
+  .left, .right {
+    width: 100%;
+  }
+  
+  .left {
+    padding: 40px;
+  }
+  
+  .right {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .left {
+    padding: 20px;
+  }
+  
+  .title {
+    font-size: 22px;
+  }
 }

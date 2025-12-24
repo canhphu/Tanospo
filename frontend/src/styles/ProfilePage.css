@@ -4,6 +4,18 @@
   margin: 0 auto;
   padding: 0;
   font-family: "Inter", sans-serif;
+  animation: profileFadeIn 0.6s ease;
+}
+
+@keyframes profileFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Top Bar */
@@ -15,6 +27,19 @@
   justify-content: flex-end;
   align-items: center;
   padding-right: 20px;
+  animation: slideDown 0.5s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .logout-btn {
@@ -25,10 +50,14 @@
   font-size: 13px;
   cursor: pointer;
   color: #5570ff;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .logout-btn:hover {
   background-color: #f3f5ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(85, 112, 255, 0.2);
 }
 
 /* User Info */
@@ -38,12 +67,32 @@
   margin-top: 20px;
   gap: 14px;
   padding-left: 20px;
+  animation: userSlideIn 0.7s ease 0.2s both;
+}
+
+@keyframes userSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .user-avatar {
   width: 55px;
   height: 55px;
   border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.user-avatar:hover {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 6px 20px rgba(77, 115, 255, 0.3);
 }
 
 .user-text .user-name {
@@ -64,6 +113,18 @@
   gap: 25px;
   margin-top: 25px;
   padding-left: 20px;
+  animation: buttonsSlideIn 0.8s ease 0.4s both;
+}
+
+@keyframes buttonsSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .btn {
@@ -73,6 +134,37 @@
   color: white;
   font-size: 15px;
   cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+.btn:active {
+  transform: translateY(-1px);
 }
 
 .btn-blue {
@@ -95,6 +187,26 @@
   border-radius: 12px;
   border: 1.5px solid #d0d0d0;
   font-size: 15px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  animation: boxFadeIn 0.9s ease 0.6s both;
+}
+
+@keyframes boxFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.post-box:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border-color: #4d73ff;
 }
 
 /* Editable Description */
@@ -186,4 +298,71 @@
 .cancel-btn:hover {
   background: #e0e0e0;
   border-color: #999;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .profile-container {
+    max-width: 100%;
+  }
+  
+  .user-info {
+    padding-left: 15px;
+  }
+  
+  .menu-buttons {
+    padding-left: 15px;
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+  
+  .btn {
+    padding: 10px 24px;
+    font-size: 14px;
+  }
+  
+  .post-box {
+    margin: 25px 15px;
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .top-bar {
+    padding-right: 10px;
+  }
+  
+  .user-info {
+    padding-left: 10px;
+    gap: 10px;
+  }
+  
+  .user-avatar {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .user-text .user-name {
+    font-size: 18px;
+  }
+  
+  .user-email {
+    font-size: 12px;
+  }
+  
+  .menu-buttons {
+    padding-left: 10px;
+    gap: 10px;
+  }
+  
+  .btn {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+  
+  .post-box {
+    margin: 20px 10px;
+    padding: 12px;
+    font-size: 14px;
+  }
 }

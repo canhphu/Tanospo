@@ -1,7 +1,21 @@
 .post-container {
-  margin:0 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
   text-align: center;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  animation: fadeInUp 0.6s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .post-title {
@@ -14,16 +28,93 @@
   margin-bottom: 30px;
   box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
   letter-spacing: 0.5px;
+  animation: titleSlideDown 0.8s ease;
+  transition: all 0.3s ease;
+}
+
+@keyframes titleSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.post-title:hover {
+  box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4);
+  transform: translateY(-3px);
+}
+
+/* Back Button */
+.back-button {
+  max-width: 1200px;
+  margin: 0 auto 30px;
+  padding: 0 20px;
+  text-align: left;
+}
+
+.back-button button {
+  /* Layout */
+  display: inline-block;
+  padding: 8px 16px;
+  
+  /* Visual */
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(102, 126, 234, 0.3);
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  
+  /* Backdrop Effects */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  
+  /* Typography */
+  color: #667eea;
+  font-size: 14px;
+  font-weight: 600;
+  
+  /* Interaction */
+  cursor: pointer;
+  transition: background 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.back-button button:hover {
+  background: #fff;
+  border-color: #667eea;
+  color: #5a67d8;
+  transform: translateX(-5px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+}
+
+.back-button button:active {
+  transform: translateX(-3px);
 }
 
 .image-upload-wrapper {
-  margin-bottom: 30px;
+  margin-bottom: 50px;
+  margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 1;
 }
 
 .image-upload-wrapper label {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   cursor: pointer;
-  transition: transform 0.3s ease;
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 400px;
 }
 
 .image-upload-wrapper label:hover {
@@ -31,26 +122,47 @@
 }
 
 .preview-image {
-  width: 500px;
-  height: 350px;
+  width: 100%;
+  height: 240px;
   object-fit: cover;
-  border-radius: 16px;
-  border: 3px solid #fff;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease;
-  background: #f8fafc;
+  border-radius: 20px;
+  border: 3px dashed rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.03) 0%, rgba(118, 75, 162, 0.03) 100%);
+  position: relative;
 }
 
 .preview-image:hover {
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.2);
   transform: scale(1.02);
+  border-color: rgba(102, 126, 234, 0.6);
+  border-style: solid;
 }
 
 .upload-text {
   font-size: 14px;
-  color: #64748b;
-  margin-top: 12px;
-  font-weight: 500;
+  color: #667eea;
+  margin-top: 20px;
+  font-weight: 600;
+  text-align: center;
+  padding: 10px 20px;
+  background: transparent;
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 2px solid rgba(102, 126, 234, 0.3);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+  letter-spacing: 0.3px;
+}
+
+.image-upload-wrapper label:hover .upload-text {
+  background: rgba(255, 255, 255, 0.5);
+  border-color: rgba(102, 126, 234, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.2);
+  color: #5a67d8;
 }
 
 .form-wrapper {
@@ -117,17 +229,101 @@
   font-weight: 600;
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
   letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+}
+
+.submit-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.submit-button:hover::before {
+  width: 500px;
+  height: 500px;
 }
 
 .submit-button:hover {
   background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(102, 126, 234, 0.5);
 }
 
 .submit-button:active {
-  transform: translateY(0);
+  transform: translateY(-1px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .post-container {
+    padding: 15px;
+  }
+  
+  .back-button {
+    margin-bottom: 20px;
+  }
+  
+  .post-title {
+    font-size: 24px;
+    padding: 16px;
+  }
+  
+  .preview-image {
+    max-width: 100%;
+    height: 250px;
+  }
+  
+  .form-wrapper {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .post-container {
+    padding: 10px;
+  }
+  
+  .back-button {
+    margin-bottom: 15px;
+  }
+  
+  .back-button button {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+  
+  .post-title {
+    font-size: 20px;
+    padding: 12px;
+  }
+  
+  .preview-image {
+    height: 200px;
+  }
+  
+  .form-wrapper {
+    padding: 15px;
+  }
+  
+  .input-box,
+  .text-area {
+    padding: 12px;
+    font-size: 14px;
+  }
+  
+  .submit-button {
+    padding: 14px;
+    font-size: 15px;
+  }
 }

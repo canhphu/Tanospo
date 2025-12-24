@@ -3,63 +3,132 @@
   margin: 0 auto;
   padding: 20px;
   font-family: 'Arial', sans-serif;
+  animation: pageLoad 0.6s ease;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fcd34d 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite, pageLoad 0.6s ease;
+  min-height: 100vh;
+  position: relative;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes pageLoad {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Header Image */
 .location-header {
   width: 100%;
-  height: 300px;
+  height: 350px;
   overflow: hidden;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  margin-bottom: 25px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
   position: relative;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: headerFadeIn 0.8s ease;
+  border: 3px solid rgba(255, 255, 255, 0.8);
 }
 
-.back-button {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  background: rgba(255, 255, 255, 0.9);
-  border: none;
-  border-radius: 50px;
-  padding: 10px 20px;
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  z-index: 10;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+@keyframes headerFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-.back-button:hover {
-  background: rgba(255, 255, 255, 1);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+.location-header:hover {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  transform: scale(1.02);
 }
 
 .location-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: brightness(1);
+}
+
+.location-header:hover .location-image {
+  transform: scale(1.15);
+  filter: brightness(1.1);
 }
 
 /* Location Info */
 .location-info {
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 30px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  padding: 35px;
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  margin-bottom: 35px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: infoSlideUp 0.7s ease 0.2s both;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  position: relative;
+  overflow: hidden;
+}
+
+.location-info::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #fbbf24, #f59e0b, #fbbf24);
+  background-size: 200% 100%;
+  animation: shimmerGold 3s linear infinite;
+}
+
+@keyframes shimmerGold {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes infoSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.location-info:hover {
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.2);
+  transform: translateY(-6px) scale(1.01);
 }
 
 .location-name {
-  font-size: 32px;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 20px;
+  font-size: 36px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #92400e 0%, #d97706 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 25px;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .location-details {
@@ -69,15 +138,33 @@
 .detail-item {
   display: flex;
   align-items: center;
-  margin-bottom: 12px;
-  font-size: 16px;
+  margin-bottom: 15px;
+  font-size: 17px;
   color: #555;
+  padding: 12px;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.detail-item:hover {
+  background: rgba(251, 191, 36, 0.15);
+  transform: translateX(8px) scale(1.02);
+  color: #d97706;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
 }
 
 .detail-icon {
-  font-size: 20px;
-  margin-right: 12px;
-  width: 24px;
+  font-size: 22px;
+  margin-right: 15px;
+  width: 28px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.detail-item:hover .detail-icon {
+  transform: scale(1.3) rotate(10deg);
+  filter: drop-shadow(0 4px 8px rgba(251, 191, 36, 0.5));
 }
 
 .detail-text {
@@ -94,59 +181,133 @@
 .btn-review, .btn-maps {
   flex: 1;
   min-width: 200px;
-  padding: 15px 20px;
+  padding: 16px 24px;
   border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: center;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.5px;
+}
+
+.btn-review::before,
+.btn-maps::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn-review:hover::before,
+.btn-maps:hover::before {
+  width: 500px;
+  height: 500px;
 }
 
 .btn-review {
-  background: #4285f4;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
 }
 
 .btn-review:hover {
-  background: #3367d6;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-5px) scale(1.03);
+  box-shadow: 0 12px 35px rgba(59, 130, 246, 0.5),
+              0 0 40px rgba(59, 130, 246, 0.3);
+}
+
+.btn-review:active {
   transform: translateY(-2px);
 }
 
 .btn-maps {
-  background: #34a853;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
 }
 
 .btn-maps:hover {
-  background: #2d8e47;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-5px) scale(1.03);
+  box-shadow: 0 12px 35px rgba(16, 185, 129, 0.5),
+              0 0 40px rgba(16, 185, 129, 0.3);
+}
+
+.btn-maps:active {
   transform: translateY(-2px);
 }
 
 /* Comments Section */
 .comments-section {
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  padding: 35px;
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  animation: infoSlideUp 0.7s ease 0.4s both;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  position: relative;
+  overflow: hidden;
+}
+
+.comments-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #fbbf24, #f59e0b, #fbbf24);
+  background-size: 200% 100%;
+  animation: shimmerGold 3s linear infinite;
+}
+
+.comments-section:hover {
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.2);
+  transform: scale(1.01);
 }
 
 .comments-title {
-  font-size: 24px;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 25px;
-  border-bottom: 2px solid #f0f0f0;
-  padding-bottom: 10px;
+  font-size: 28px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #92400e 0%, #d97706 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 30px;
+  border-bottom: 3px solid rgba(251, 191, 36, 0.3);
+  padding-bottom: 15px;
+  letter-spacing: 0.5px;
 }
 
 /* Add Comment Form */
 .add-comment {
-  margin-bottom: 30px;
-  padding: 20px;
-  background: #f8f9fa;
-  border-radius: 8px;
+  margin-bottom: 35px;
+  padding: 25px;
+  background: rgba(254, 243, 199, 0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 2px solid rgba(251, 191, 36, 0.3);
+  box-shadow: 0 4px 16px rgba(251, 191, 36, 0.2);
+  transition: all 0.3s ease;
+}
+
+.add-comment:hover {
+  box-shadow: 0 8px 24px rgba(251, 191, 36, 0.3);
+  transform: translateY(-2px);
 }
 
 .add-comment h3 {
@@ -162,17 +323,20 @@
 }
 
 .comment-input, .comment-textarea {
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
+  padding: 14px;
+  border: 2px solid rgba(251, 191, 36, 0.3);
+  border-radius: 10px;
+  font-size: 15px;
   font-family: inherit;
+  background: rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
 }
 
 .comment-input:focus, .comment-textarea:focus {
   outline: none;
-  border-color: #4285f4;
-  box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.2);
+  background: rgba(255, 255, 255, 1);
 }
 
 .comment-textarea {
@@ -199,20 +363,44 @@
 }
 
 .btn-submit-comment {
-  background: #4285f4;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   color: white;
   border: none;
-  padding: 12px 24px;
-  border-radius: 6px;
-  font-size: 16px;
-  font-weight: 600;
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-size: 17px;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   align-self: flex-start;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-submit-comment::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn-submit-comment:hover::before {
+  width: 300px;
+  height: 300px;
 }
 
 .btn-submit-comment:hover {
-  background: #3367d6;
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 10px 30px rgba(245, 158, 11, 0.5),
+              0 0 40px rgba(245, 158, 11, 0.3);
 }
 
 /* Comments List */
@@ -223,11 +411,43 @@
 }
 
 .comment-item {
-  padding: 20px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border-left: 4px solid #4285f4;
+  padding: 25px;
+  background: rgba(254, 243, 199, 0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border-left: 5px solid #f59e0b;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: commentFadeIn 0.5s ease both;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border: 2px solid rgba(251, 191, 36, 0.3);
+  border-left: 5px solid #f59e0b;
 }
+
+@keyframes commentFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.comment-item:hover {
+  background: rgba(254, 243, 199, 0.7);
+  transform: translateX(8px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(251, 191, 36, 0.3);
+  border-left-color: #d97706;
+  border-left-width: 7px;
+}
+
+.comments-list .comment-item:nth-child(1) { animation-delay: 0.1s; }
+.comments-list .comment-item:nth-child(2) { animation-delay: 0.2s; }
+.comments-list .comment-item:nth-child(3) { animation-delay: 0.3s; }
+.comments-list .comment-item:nth-child(4) { animation-delay: 0.4s; }
+.comments-list .comment-item:nth-child(5) { animation-delay: 0.5s; }
 
 .comment-header {
   display: flex;
@@ -265,6 +485,10 @@
     padding: 10px;
   }
   
+  .location-header {
+    height: 200px;
+  }
+  
   .location-info, .comments-section {
     padding: 20px;
   }
@@ -279,5 +503,38 @@
   
   .btn-review, .btn-maps {
     width: 100%;
+    min-width: auto;
+  }
+  
+  .detail-item {
+    font-size: 14px;
+  }
+  
+  .back-button {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .location-detail-container {
+    padding: 5px;
+  }
+  
+  .location-header {
+    height: 150px;
+    border-radius: 8px;
+  }
+  
+  .location-info, .comments-section {
+    padding: 15px;
+  }
+  
+  .location-name {
+    font-size: 20px;
+  }
+  
+  .add-comment {
+    padding: 15px;
   }
 }
