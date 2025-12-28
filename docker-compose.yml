@@ -3,6 +3,6 @@ services:
     image: mongo:latest
     container_name: tanospo-mongo
     ports:
-      - "27017:27017"
+      - "27018:27017"
     volumes:
       - ./backend/mongodbdata:/data/db 

@@ -7,17 +7,21 @@
 }
 
 .clear-history-btn {
-  background: #ff4d4f;
+  background: linear-gradient(135deg, #fb7185 0%, #f97316 100%);
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
+  padding: 8px 18px;
+  border-radius: 999px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  font-size: 13px;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  box-shadow: 0 6px 16px rgba(248, 113, 113, 0.5);
 }
 
 .clear-history-btn:hover {
-  background: #ff7875;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(248, 113, 113, 0.7);
 }
 
 .video-icon {
@@ -56,4 +60,18 @@
 
 .empty-state p {
   font-size: 14px;
+}
+
+.empty-state-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  margin: 0 auto 16px;
+  background: radial-gradient(circle at 30% 30%, #e5edff, #c7d2fe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: #4f46e5;
+  box-shadow: 0 10px 24px rgba(129, 140, 248, 0.4);
 }
