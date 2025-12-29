@@ -4,7 +4,6 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   color: #2d3748;
   min-height: 100vh;
-  max-width: 1400px;
   margin: 0 auto;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 20%, #f5f7fa 50%, #c3cfe2 80%, #f5f7fa 100%);
   background-size: 400% 400%;
@@ -196,7 +195,7 @@
 }
 
 .write-btn::after {
-  content: '✨';
+  content: '';
   position: absolute;
   right: -30px;
   top: 50%;

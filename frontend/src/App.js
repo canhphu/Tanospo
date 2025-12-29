@@ -32,15 +32,8 @@ const PublicRoute = ({ children }) => {
   return isAuthenticated ? <Navigate to="/dashboard" replace /> : children;
 };
 
-// (Removed unused ConfigError component to satisfy eslint)
-
 function App() {
   const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID || 'dummy-client-id';
-  
-  // Temporarily disable the check to allow testing without Google OAuth
-  // if (!clientId || clientId === 'undefined') {
-  //   return <ConfigError />;
-  // }
   
   return (
     <GoogleOAuthProvider clientId={clientId}>

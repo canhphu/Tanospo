@@ -91,9 +91,9 @@ export default function Favorite() {
               marginRight: '10px'
             }}
           >
-            ←
+            ←お気に入り
           </button>
-          <span className="welcome-text">お気に入り</span>
+    
         </div>
         
         <button className="start-btn" onClick={() => navigate('/dashboard')}>ダッシュボード</button>

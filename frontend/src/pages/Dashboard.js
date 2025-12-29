@@ -89,7 +89,6 @@ export default function Dashboard() {
   };
 
   const handleLogout = () => {
-    alert("Đang đăng xuất...");
     logout();
     navigate('/login'); 
     setIsDropdownOpen(false); 
