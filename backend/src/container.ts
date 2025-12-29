@@ -18,7 +18,11 @@ import { TogglePostLike } from './application/useCases/TogglePostLike';
 import { AddComment } from './application/useCases/AddComment';
 import { GetPostComment } from './application/useCases/GetPostComment';
 import { JwtService } from './application/services/JwtService';
+import { GoogleVerifier } from './application/services/GoogleVerifier';
+import { LoginWithGoogle } from './application/useCases/LoginWithGoogle';
 import { CreateLocation } from './application/useCases/CreateLocation';
+import { GetLocationById } from './application/useCases/GetLocationById';
+import { GetUserById } from './application/useCases/GetUserById';
 
 
 // Register repositories
@@ -39,8 +43,12 @@ container.register(TogglePostLike, { useClass: TogglePostLike });
 container.register(AddComment, { useClass: AddComment });
 container.register(GetPostComment, { useClass: GetPostComment });
 container.register(CreateLocation, { useClass: CreateLocation });
+container.register(GetLocationById, { useClass: GetLocationById });
+container.register(GetUserById, { useClass: GetUserById });
+container.register(LoginWithGoogle, { useClass: LoginWithGoogle });
 
 // Register services
 container.register(JwtService, { useClass: JwtService });
+container.register(GoogleVerifier, { useClass: GoogleVerifier });
 
 export { container };

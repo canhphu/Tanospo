@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { locations } from '../lib/locationsData';
-import { getAllPosts } from '../lib/posts';
+import { postsAPI } from '../api/posts';
 import '../styles/LocationDetailPage.css';
 
 export default function LocationDetailPage() {
@@ -27,13 +27,28 @@ export default function LocationDetailPage() {
     setLocation(foundLocation);
     
     if (foundLocation) {
-      const allPosts = getAllPosts();
-      // Filter posts that mention this location or are from this location
-      const locationPosts = allPosts.filter(post => 
-        post.author.location.includes(foundLocation.name) || 
-        post.content.includes(foundLocation.name)
-      );
-      setPosts(locationPosts);
+      // Fetch posts and filter by location match (content or `locationId` string match)
+      postsAPI.getAll({ limit: 50, offset: 0 })
+        .then(all => {
+          const adapted = (all || []).map(p => ({
+            id: p.id,
+            author: {
+              name: p.userId?.slice(0, 6) || 'ユーザー',
+              avatar: 'https://picsum.photos/seed/avatar123/36/48.jpg',
+              location: p.locationId || '—',
+            },
+            content: p.content,
+            image: p.imageUrl ? { src: p.imageUrl, alt: 'post' } : null,
+            timestamp: p.createdAt || new Date().toISOString(),
+            likes: Array.isArray(p.likedBy) ? p.likedBy.length : 0,
+          }));
+          const locationPosts = adapted.filter(post => 
+            (typeof post.author.location === 'string' && post.author.location.includes(foundLocation.name)) ||
+            (typeof post.content === 'string' && post.content.includes(foundLocation.name))
+          );
+          setPosts(locationPosts);
+        })
+        .catch(err => console.error('Failed to load posts for location:', err));
     }
     
     setLoading(false);

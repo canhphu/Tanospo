@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { postsAPI } from "../api/posts";
 import "../styles/PostPage.css";
 import { locations } from "../lib/locationsData";
 import { postAPI } from "../lib/api";
@@ -39,6 +40,20 @@ export default function PostPage() {
       setImage(URL.createObjectURL(file));
     }
   };
+    const handleSubmit = async () => {
+      setError("");
+      setSubmitting(true);
+      try {
+        // Minimal create using postType 'status'. Image upload not implemented, so send preview URL if present.
+        await postsAPI.create({ postType: 'status', content: content || title || ' ', imageUrl: image || undefined });
+        navigate('/dashboard');
+      } catch (e) {
+        console.error('Failed to create post:', e);
+        setError('投稿に失敗しました');
+      } finally {
+        setSubmitting(false);
+      }
+    };
    const handleBack = () => {
     navigate(-1);
   };

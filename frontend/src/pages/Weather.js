@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { locations } from "../lib/locationsData";
+import { locationsAPI } from "../api/locations";
 import "../styles/Weather.css";
 
 export default function Weather() {
@@ -44,17 +45,20 @@ export default function Weather() {
           const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
           setUserLocation(coords);
           fetchWeatherData(coords.lat, coords.lng);
+          fetchNearby(coords.lat, coords.lng);
         },
         () => {
           const fallbackCoords = { lat: 21.0285, lng: 105.8542 };
           setUserLocation(fallbackCoords);
           fetchWeatherData(fallbackCoords.lat, fallbackCoords.lng);
+          fetchNearby(fallbackCoords.lat, fallbackCoords.lng);
         }
       );
     } else {
       const fallbackCoords = { lat: 21.0285, lng: 105.8542 };
       setUserLocation(fallbackCoords);
       fetchWeatherData(fallbackCoords.lat, fallbackCoords.lng);
+      fetchNearby(fallbackCoords.lat, fallbackCoords.lng);
     }
   }, []);
 
@@ -120,6 +124,31 @@ export default function Weather() {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     const distance = R * c;
     return distance;
+  };
+
+  const fetchNearby = async (lat, lng) => {
+    try {
+      const data = await locationsAPI.nearby({ lat, lng, radius: 3000 });
+      // Adapt backend locations to UI shape
+      const adapted = (data || []).map(l => ({
+        id: l.id,
+        name: l.name,
+        distance: '', // compute when rendering
+        address: l.address || '',
+        description: l.description || '',
+        facilities: Array.isArray(l.amenities) ? l.amenities : [],
+        sportIds: [],
+        openTime: '',
+        rating: 0,
+        lat: l.coordinates?.latitude,
+        lng: l.coordinates?.longitude,
+        image: l.imageUrl || 'https://picsum.photos/seed/location/400/300.jpg'
+      }));
+      setFilteredLocations(adapted);
+    } catch (e) {
+      console.warn('Nearby locations failed, falling back to static:', e.message);
+      setFilteredLocations(locations);
+    }
   };
 
 

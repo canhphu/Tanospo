@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useGoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../context/AuthContext';
+import { authAPI } from '../api/auth';
 import "../styles/Register.css";
 
 export default function Register() {
@@ -23,7 +24,7 @@ export default function Register() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -38,16 +39,17 @@ export default function Register() {
       return;
     }
 
-    // In a real app, you would send this to your backend
     try {
-      // Mock registration - in a real app, you would call an API here
-      const user = {
-        email: formData.email,
+      // Backend register then login to obtain token
+      await authAPI.register({
         name: formData.email.split('@')[0],
-        token: 'mock-jwt-token'
-      };
-      
-      authenticate(user);
+        email: formData.email,
+        password: formData.password,
+        language: 'ja',
+      });
+      const { user, token } = await authAPI.login(formData.email, formData.password);
+      const authUser = { ...user, token, name: user?.name || formData.email.split('@')[0], email: user?.email, timestamp: new Date().toISOString() };
+      authenticate(authUser);
       navigate('/dashboard');
     } catch (err) {
       setError('登録に失敗しました。もう一度お試しください。');
