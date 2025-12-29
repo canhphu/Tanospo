@@ -109,65 +109,65 @@ export default function Login() {
   return (
     <div className="login-container">
       <div className="left">
-        <h2 className="title">ログイン</h2>
-        
-        {error && <div className="error-message">{error}</div>}
+        <div className="login-form-wrapper">
+          <h2 className="title">ログイン</h2>
+          <p className="subtitle">アカウントにサインインして続行</p>
+          
+          {error && <div className="error-message">{error}</div>}
 
-        <form onSubmit={handleSubmit}>
-          <div className="input-group">
-            <label>メール</label>
-            <input 
-              type="email" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="email@example.com" 
-              required
+          <form onSubmit={handleSubmit}>
+            <div className="input-group">
+              <label>メールアドレス</label>
+              <input 
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="email@example.com" 
+                required
+              />
+            </div>
+
+            <div className="input-group">
+              <label>パスワード</label>
+              <input 
+                type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+              />
+            </div>
+
+            <div className="forgot-password-wrapper">
+              <p className="forgot" onClick={handleForgotPassword}>パスワードをお忘れですか？</p>
+            </div>
+
+            <button type="submit" className="btn-login">
+              ログイン
+            </button>
+          </form>
+
+          <div className="divider">
+            <span>または</span>
+          </div>
+
+          <div className="custom-google">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleFailure}
+              text="signin_with"
+              theme="outline"
+              size="large"
+              logo_alignment="left"
             />
           </div>
 
-          <div className="input-group">
-            <label>パスワード</label>
-            <input 
-              type="password" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-
-          <p className="forgot" onClick={handleForgotPassword}>パスワードをお忘れですか</p>
-
-          <button type="submit" className="btn-login">
-            ログイン
-          </button>
-        </form>
-
-        <div className="divider">または</div>
-
-        <div className="custom-google">
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={handleGoogleFailure}
-            text="signin_with"
-            theme="outline"
-            size="large"
-            logo_alignment="left"
-          />
-        </div>
-
-        <p className="register">
-          まだアカウントがありません？
-          <span className="register-link" onClick={() => navigate('/register')}>
-            登録する
-          </span>
-        </p>
-      </div>
-
-      <div className="right">
-        <div className="dots">
-          <div></div>
-          <div></div>
-          <div></div>
+          <p className="register">
+            まだアカウントがありませんか？{' '}
+            <span className="register-link" onClick={() => navigate('/register')}>
+              登録する
+            </span>
+          </p>
         </div>
       </div>
 

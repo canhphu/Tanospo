@@ -10,6 +10,7 @@ export interface PostProps {
   locationId?: string;
   content: string;
   imageUrl?: string;
+  likedBy: string[]; 
   createdAt: Date;
   updatedAt: Date;
 }
@@ -41,12 +42,45 @@ export class Post {
     return this.props.imageUrl;
   }
 
+  get likedBy(): string[] {
+    return this.props.likedBy;
+  }
+
   get createdAt(): Date {
     return this.props.createdAt;
   }
 
   get updatedAt(): Date {
     return this.props.updatedAt;
+  }
+
+  isLikedBy(userId: string): boolean {
+    return this.props.likedBy.includes(userId);
+  }
+
+  toggleLike(userId: string): void {
+    const index = this.props.likedBy.indexOf(userId);
+    if (index > -1) {
+      this.props.likedBy.splice(index, 1); 
+    } else {
+      this.props.likedBy.push(userId); 
+    }
+    this.props.updatedAt = new Date();
+  }
+
+  like(userId: string): void {
+    if (!this.isLikedBy(userId)) {
+      this.props.likedBy.push(userId);
+      this.props.updatedAt = new Date();
+    }
+  }
+
+  unlike(userId: string): void {
+    const index = this.props.likedBy.indexOf(userId);
+    if (index > -1) {
+      this.props.likedBy.splice(index, 1);
+      this.props.updatedAt = new Date();
+    }
   }
 
   toJSON(): Omit<PostProps, '_id'> & { id: string } {
@@ -63,4 +97,3 @@ export class Post {
     return doc;
   }
 }
-

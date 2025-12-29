@@ -18,10 +18,10 @@ export default function PostPage() {
 
   return (
     <div className="post-container">
-      <h1 className="post-title">投稿</h1>
       <div className="back-button">
-        <button onClick={handleBack}>← 戻る</button>
+        <button onClick={handleBack}> 戻る</button>
       </div>
+      <h1 className="post-title">投稿</h1>
       <div className="image-upload-wrapper">
         <label htmlFor="imageUpload">
           <img
