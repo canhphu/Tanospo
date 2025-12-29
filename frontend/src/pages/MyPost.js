@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { getAllPosts } from "../lib/posts";
-import "../styles/Dashboard.css";
 
 export default function MyPost() {
   const navigate = useNavigate();
@@ -90,21 +89,13 @@ export default function MyPost() {
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
-        <div className="user-info">
+        <div className="myPost-header">
           <button 
             className="back-btn" 
             onClick={() => navigate('/profile')}
-            style={{ 
-              background: 'none', 
-              border: 'none', 
-              fontSize: '20px', 
-              cursor: 'pointer',
-              marginRight: '10px'
-            }}
           >
-            ←
+            ← マイ投稿
           </button>
-          <span className="welcome-text">マイ投稿</span>
         </div>
         
         <button className="start-btn" onClick={() => navigate('/dashboard')}>ダッシュボード</button>

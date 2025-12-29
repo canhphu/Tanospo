@@ -32,21 +32,8 @@ const PublicRoute = ({ children }) => {
   return isAuthenticated ? <Navigate to="/dashboard" replace /> : children;
 };
 
-// Configuration Error Component
-const ConfigError = () => (
-  <div style={{ padding: '20px', textAlign: 'center' }}>
-    <h2>Configuration Error</h2>
-    <p>Google Client ID is not configured. Please check your .env file and restart the server.</p>
-  </div>
-);
-
 function App() {
   const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID || 'dummy-client-id';
-  
-  // Temporarily disable the check to allow testing without Google OAuth
-  // if (!clientId || clientId === 'undefined') {
-  //   return <ConfigError />;
-  // }
   
   return (
     <GoogleOAuthProvider clientId={clientId}>
