@@ -60,7 +60,7 @@ export default function Weather() {
       fetchWeatherData(fallbackCoords.lat, fallbackCoords.lng);
       fetchNearby(fallbackCoords.lat, fallbackCoords.lng);
     }
-  }, []);
+  }, [fetchNearby]); // Added fetchNearby to dependencies
 
   const fetchWeatherData = async (lat, lon) => {
     try {
@@ -129,21 +129,31 @@ export default function Weather() {
   const fetchNearby = async (lat, lng) => {
     try {
       const data = await locationsAPI.nearby({ lat, lng, radius: 3000 });
-      // Adapt backend locations to UI shape
-      const adapted = (data || []).map(l => ({
-        id: l.id,
-        name: l.name,
-        distance: '', // compute when rendering
-        address: l.address || '',
-        description: l.description || '',
-        facilities: Array.isArray(l.amenities) ? l.amenities : [],
-        sportIds: [],
-        openTime: '',
-        rating: 0,
-        lat: l.coordinates?.latitude,
-        lng: l.coordinates?.longitude,
-        image: l.imageUrl || 'https://picsum.photos/seed/location/400/300.jpg'
-      }));
+      // Calculate distance for each location and sort by distance
+      const adapted = (data || [])
+        .map(l => {
+          const distance = calculateDistance(
+            lat,
+            lng,
+            l.coordinates?.latitude,
+            l.coordinates?.longitude
+          );
+          return {
+            id: l.id,
+            name: l.name,
+            distance: distance, // Store actual distance for sorting
+            address: l.address || '',
+            description: l.description || '',
+            facilities: Array.isArray(l.amenities) ? l.amenities : [],
+            sportIds: [],
+            openTime: '',
+            rating: 0,
+            lat: l.coordinates?.latitude,
+            lng: l.coordinates?.longitude,
+            image: l.imageUrl || 'https://picsum.photos/seed/location/400/300.jpg'
+          };
+        })
+        .sort((a, b) => a.distance - b.distance); // Sort by distance in ascending order
       setFilteredLocations(adapted);
     } catch (e) {
       console.warn('Nearby locations failed, falling back to static:', e.message);

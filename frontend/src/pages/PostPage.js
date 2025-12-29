@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { postsAPI } from "../api/posts";
 import "../styles/PostPage.css";
 import { locations } from "../lib/locationsData";
-import { postAPI } from "../lib/api";
 
 // Format location for display
 const formatLocation = (location) => {
@@ -13,23 +11,22 @@ const formatLocation = (location) => {
 export default function PostPage() {
   const [image, setImage] = useState(null);
   const [location, setLocation] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [Submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const suggestionsRef = useRef(null);
+
   const navigate = useNavigate();
 
-  // Handle click outside to close suggestions
   useEffect(() => {
-    function handleClickOutside(event) {
+    const handleClickOutside = (event) => {
       if (suggestionsRef.current && !suggestionsRef.current.contains(event.target)) {
         setShowSuggestions(false);
       }
-    }
+    };
+    
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -43,19 +40,19 @@ export default function PostPage() {
     }
   };
     const handleSubmit = async () => {
-      setError("");
-      setSubmitting(true);
-      try {
-        // Minimal create using postType 'status'. Image upload not implemented, so send preview URL if present.
-        await postsAPI.create({ postType: 'status', content: content || title || ' ', imageUrl: image || undefined });
-        navigate('/dashboard');
-      } catch (e) {
-        console.error('Failed to create post:', e);
-        setError('投稿に失敗しました');
-      } finally {
-        setSubmitting(false);
-      }
-    };
+    try {
+      setIsSubmitting(true);
+      // Handle form submission here
+      console.log('Submitting post:', { title, content, location, image });
+      // Add your API call here
+      // await postAPI.create({ title, content, location, image });
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error submitting post:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
    const handleBack = () => {
     navigate(-1);
   };
