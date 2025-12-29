@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { GoogleLogin } from '@react-oauth/google';
-import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from "react-router-dom";
 import { useAuth } from '../context/AuthContext';
+import { authAPI } from '../api/auth';
 import "../styles/Login.css";
 
 export default function Login() {
@@ -25,9 +25,21 @@ export default function Login() {
     }
 
     try {
-      const success = login(email, password);
-      if (success) {
+      // Prefer backend login; fallback to AuthContext mock on failure
+      try {
+        const { user, token } = await authAPI.login(email, password);
+        // Shape: { user, token }
+        const authUser = { ...user, token, name: user?.name || user?.email?.split('@')[0], email: user?.email, timestamp: new Date().toISOString() };
+        authenticate(authUser);
         navigate('/dashboard');
+      } catch (apiErr) {
+        // fallback to test account if backend rejects
+        const success = login(email, password);
+        if (success) {
+          navigate('/dashboard');
+        } else {
+          throw apiErr;
+        }
       }
     } catch (err) {
       setError('Failed to log in');
@@ -36,32 +48,23 @@ export default function Login() {
   };
 
   const handleGoogleSuccess = async (credentialResponse) => {
-    console.log('Google success response:', credentialResponse);
-    
-    // Decode the JWT credential
     const credential = credentialResponse?.credential;
-    if (credential) {
-      try {
-        const payload = jwtDecode(credential);
-        const user = {
-          email: payload?.email,
-          name: payload?.name || payload?.given_name || 'Google User',
-          token: credential,
-          timestamp: new Date().toISOString()
-        };
-        authenticate(user);
-        navigate('/dashboard');
-        return;
-      } catch (err) {
-        console.error('Error decoding credential:', err);
-        setError('Google login succeeded but failed to decode credential.');
-        return;
-      }
+    if (!credential) {
+      const debug = JSON.stringify(credentialResponse || {}, null, 2);
+      setError('Google login failed. No credential returned. Debug: ' + debug);
+      console.warn('No credential in Google response:', credentialResponse);
+      return;
     }
-
-    const debug = JSON.stringify(credentialResponse || {}, null, 2);
-    setError('Google login failed. No credential returned. Debug: ' + debug);
-    console.warn('No credential in Google response:', credentialResponse);
+    try {
+      // Exchange Google ID token for backend JWT
+      const { user, token } = await authAPI.googleLogin(credential);
+      const authUser = { ...user, token, timestamp: new Date().toISOString() };
+      authenticate(authUser);
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('Google login exchange failed:', err);
+      setError('Google login failed on server. Please try again.');
+    }
   };
 
   const handleGoogleFailure = (error) => {

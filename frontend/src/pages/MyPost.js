@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
-import { getAllPosts } from "../lib/posts";
+import { postsAPI } from "../api/posts";
 import "../styles/Dashboard.css";
 
 export default function MyPost() {
@@ -15,35 +15,50 @@ export default function MyPost() {
   const [myPosts, setMyPosts] = useState([]);
 
   useEffect(() => {
-    // Load posts and liked posts from localStorage
-    const allPosts = getAllPosts();
-    
+    // Load my posts from backend and liked posts from localStorage
     const savedLikedPosts = localStorage.getItem('likedPosts');
     if (savedLikedPosts) {
       setLikedPosts(new Set(JSON.parse(savedLikedPosts)));
     }
-
-    // Filter posts that belong to current user
-    // For now, we'll simulate user posts by matching with user email/name
-    const userPosts = allPosts.filter(post => {
-      // This is a simple simulation - in a real app, you'd have a userId field
-      const userName = user?.name?.toLowerCase() || user?.email?.split('@')[0]?.toLowerCase();
-      const postAuthorName = post.author.name.toLowerCase();
-      return postAuthorName === userName;
-    });
-    
-    setMyPosts(userPosts);
+    const load = async () => {
+      try {
+        if (!user) return;
+        const list = await postsAPI.getByUser(user.id || user.userId || '');
+        const adapted = (list || []).map(p => ({
+          id: p.id,
+          author: {
+            name: user.name || user.email?.split('@')[0] || 'ユーザー',
+            avatar: 'https://picsum.photos/seed/avatar123/36/48.jpg',
+            location: p.locationId || '—',
+          },
+          content: p.content,
+          image: p.imageUrl ? { src: p.imageUrl, alt: 'post' } : null,
+          timestamp: p.createdAt || new Date().toISOString(),
+          likes: Array.isArray(p.likedBy) ? p.likedBy.length : 0,
+        }));
+        setMyPosts(adapted);
+      } catch (e) {
+        console.error('Failed to load my posts:', e);
+      }
+    };
+    load();
   }, [user]);
 
-  const toggleLike = (postId) => {
+  const toggleLike = async (postId) => {
     const newLikedPosts = new Set(likedPosts);
-    if (newLikedPosts.has(postId)) {
-      newLikedPosts.delete(postId);
-    } else {
-      newLikedPosts.add(postId);
+    try {
+      await postsAPI.toggleLike(postId);
+      if (newLikedPosts.has(postId)) {
+        newLikedPosts.delete(postId);
+      } else {
+        newLikedPosts.add(postId);
+      }
+      setLikedPosts(newLikedPosts);
+      localStorage.setItem('likedPosts', JSON.stringify([...newLikedPosts]));
+      setMyPosts(prev => prev.map(p => p.id === postId ? { ...p, likes: (p.likes || 0) + (newLikedPosts.has(postId) ? 1 : -1) } : p));
+    } catch (e) {
+      console.error('Failed to toggle like:', e);
     }
-    setLikedPosts(newLikedPosts);
-    localStorage.setItem('likedPosts', JSON.stringify([...newLikedPosts]));
   };
 
   const handleComment = (postId) => {
@@ -153,11 +168,13 @@ export default function MyPost() {
                 </div>
               </div>
               <div className="review-image-wrapper">
-                <img
-                  src={post.image.src}
-                  alt={post.image.alt}
-                  className="review-image"
-                />
+                {post.image && (
+                  <img
+                    src={post.image.src}
+                    alt={post.image.alt}
+                    className="review-image"
+                  />
+                )}
               </div>
             </div>
           ))

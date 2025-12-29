@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
-import { getAllPosts } from "../lib/posts";
+import { postsAPI } from "../api/posts";
+import { usersAPI } from "../api/users";
+import { locationsAPI } from "../api/locations";
 import "../styles/Dashboard.css";
 
 const UserDropdown = ({ onLogout, onGoToProfile }) => {
@@ -26,7 +28,7 @@ export default function Dashboard() {
   const [comments, setComments] = useState({});
   const [newComments, setNewComments] = useState({});
   const [showCommentModal, setShowCommentModal] = useState(null);
-  const posts = getAllPosts();
+  const [posts, setPosts] = useState([]);
 
   useEffect(() => {
     // Load liked posts from localStorage
@@ -34,6 +36,47 @@ export default function Dashboard() {
     if (savedLikedPosts) {
       setLikedPosts(new Set(JSON.parse(savedLikedPosts)));
     }
+  }, []);
+
+  useEffect(() => {
+    // Fetch posts from backend
+    const fetchPosts = async () => {
+      try {
+        const data = await postsAPI.getAll({ limit: 50, offset: 0 });
+        const uniqueUserIds = Array.from(new Set((data || []).map(p => p.userId).filter(Boolean)));
+        const uniqueLocationIds = Array.from(new Set((data || []).map(p => p.locationId).filter(id => !!id)));
+        const userMap = {};
+        const locationMap = {};
+        await Promise.all(uniqueUserIds.map(async (uid) => {
+          try {
+            const u = await usersAPI.getById(uid);
+            userMap[uid] = u;
+          } catch { /* ignore missing users */ }
+        }));
+        await Promise.all(uniqueLocationIds.map(async (lid) => {
+          try {
+            const l = await locationsAPI.getById(lid);
+            locationMap[lid] = l;
+          } catch { /* ignore missing locations */ }
+        }));
+        const adapted = (data || []).map(p => ({
+          id: p.id,
+          author: {
+            name: (userMap[p.userId]?.name) || (userMap[p.userId]?.email?.split('@')[0]) || 'ユーザー',
+            avatar: userMap[p.userId]?.avatarUrl || 'https://picsum.photos/seed/avatar123/36/48.jpg',
+            location: locationMap[p.locationId]?.name || '—',
+          },
+          content: p.content,
+          image: p.imageUrl ? { src: p.imageUrl, alt: 'post' } : null,
+          timestamp: p.createdAt || new Date().toISOString(),
+          likes: Array.isArray(p.likedBy) ? p.likedBy.length : 0,
+        }));
+        setPosts(adapted);
+      } catch (e) {
+        console.error('Failed to load posts:', e);
+      }
+    };
+    fetchPosts();
   }, []);
 
   useEffect(() => {
@@ -57,18 +100,45 @@ export default function Dashboard() {
     setIsDropdownOpen(false); 
   };
 
-  const toggleLike = (postId) => {
+  const toggleLike = async (postId) => {
     const newLikedPosts = new Set(likedPosts);
-    if (newLikedPosts.has(postId)) {
-      newLikedPosts.delete(postId);
-    } else {
-      newLikedPosts.add(postId);
+    try {
+      await postsAPI.toggleLike(postId);
+      if (newLikedPosts.has(postId)) {
+        newLikedPosts.delete(postId);
+      } else {
+        newLikedPosts.add(postId);
+      }
+      setLikedPosts(newLikedPosts);
+      // Optimistically update likes count in UI
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes: (p.likes || 0) + (newLikedPosts.has(postId) ? 1 : -1) } : p));
+    } catch (e) {
+      console.error('Failed to toggle like:', e);
     }
-    setLikedPosts(newLikedPosts);
   };
 
   const handleComment = (postId) => {
     setShowCommentModal(postId);
+    // Load comments from backend
+    postsAPI.getComments(postId)
+      .then(async (list) => {
+        const uniqueUserIds = Array.from(new Set((list || []).map(c => c.userId).filter(Boolean)));
+        const userMap = {};
+        await Promise.all(uniqueUserIds.map(async (uid) => {
+          try {
+            const u = await usersAPI.getById(uid);
+            userMap[uid] = u;
+          } catch { /* ignore */ }
+        }));
+        const adapted = (list || []).map(c => ({
+          id: c.id,
+          author: (userMap[c.userId]?.name) || (userMap[c.userId]?.email?.split('@')[0]) || 'ユーザー',
+          text: c.content,
+          timestamp: new Date(c.createdAt).toLocaleString(),
+        }));
+        setComments(prev => ({ ...prev, [postId]: adapted }));
+      })
+      .catch(e => console.error('Failed to load comments:', e));
   };
 
   const handleCloseModal = () => {
@@ -78,22 +148,24 @@ export default function Dashboard() {
   const handleAddComment = (postId) => {
     const commentText = newComments[postId];
     if (commentText && commentText.trim()) {
-      const newComment = {
-        id: Date.now(),
-        text: commentText.trim(),
-        author: user?.name || user?.email?.split('@')[0] || 'User',
-        timestamp: new Date().toLocaleString()
-      };
-      
-      setComments(prev => ({
-        ...prev,
-        [postId]: [...(prev[postId] || []), newComment]
-      }));
-      
-      setNewComments(prev => ({
-        ...prev,
-        [postId]: ''
-      }));
+      postsAPI.addComment(postId, { content: commentText.trim(), rating: 5 })
+        .then(saved => {
+          const newComment = {
+            id: saved.id,
+            text: saved.content,
+            author: user?.name || (user?.email ? user.email.split('@')[0] : 'ユーザー'),
+            timestamp: new Date(saved.createdAt).toLocaleString(),
+          };
+          setComments(prev => ({
+            ...prev,
+            [postId]: [...(prev[postId] || []), newComment]
+          }));
+          setNewComments(prev => ({
+            ...prev,
+            [postId]: ''
+          }));
+        })
+        .catch(e => console.error('Failed to add comment:', e));
     }
   };
 
@@ -159,11 +231,13 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="review-image-wrapper">
-              <img
-                src={post.image.src}
-                alt={post.image.alt}
-                className="review-image"
-              />
+              {post.image && (
+                <img
+                  src={post.image.src}
+                  alt={post.image.alt}
+                  className="review-image"
+                />
+              )}
             </div>
           </div>
         ))}
