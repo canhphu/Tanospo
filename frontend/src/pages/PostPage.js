@@ -17,7 +17,9 @@ export default function PostPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [Submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
   const suggestionsRef = useRef(null);
   const navigate = useNavigate();
 
