@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FaYoutube, FaStar, FaArrowLeft } from "react-icons/fa";
+import { FaYoutube, FaArrowLeft } from "react-icons/fa";
 import "../styles/VideoReview.css";
 
 export default function VideoReview() {
@@ -8,18 +8,15 @@ export default function VideoReview() {
   const location = useLocation();
   const { video } = location.state || {};
 
-  const [rating, setRating] = useState(0);
-  const [review, setReview] = useState("");
-  const [hoveredStar, setHoveredStar] = useState(0);
-  const [reviews, setReviews] = useState([]);
+  const [post, setPost] = useState("");
+  const [posts, setPosts] = useState([]);
 
   useEffect(() => {
     if (!video) return;
-    const stored = JSON.parse(localStorage.getItem("videoReviews") || "[]");
-    const videoReviews = stored.filter((r) => r.videoId === video.id);
-    // Hiển thị review mới nhất trước
-    videoReviews.sort((a, b) => b.timestamp - a.timestamp);
-    setReviews(videoReviews);
+    const stored = JSON.parse(localStorage.getItem("videoPosts") || "[]");
+    const videoPosts = stored.filter((p) => p.videoId === video.id);
+    videoPosts.sort((a, b) => b.timestamp - a.timestamp);
+    setPosts(videoPosts);
   }, [video]);
 
   const formatDate = (timestamp) => {
@@ -30,20 +27,24 @@ export default function VideoReview() {
     }
   };
 
-  const handleSubmitReview = () => {
-    const reviews = JSON.parse(localStorage.getItem("videoReviews") || "[]");
-    const newReview = {
+  const handleSubmitPost = () => {
+    if (!post.trim()) return;
+    
+    const posts = JSON.parse(localStorage.getItem("videoPosts") || "[]");
+    const newPost = {
+      id: Date.now(),
       videoId: video.id,
       videoTitle: video.title,
-      rating,
-      review,
+      content: post,
+      author: "ユーザー",
+      likes: 0,
+      comments: [],
       timestamp: Date.now(),
     };
-    const updated = [newReview, ...reviews];
-    localStorage.setItem("videoReviews", JSON.stringify(updated));
-    setReviews((prev) => [newReview, ...prev]);
-    setReview("");
-    setRating(0);
+    const updated = [newPost, ...posts];
+    localStorage.setItem("videoPosts", JSON.stringify(updated));
+    setPosts(updated);
+    setPost("");
   };
 
   return (
@@ -59,7 +60,7 @@ export default function VideoReview() {
             >
               <FaArrowLeft />
             </button>
-            <h2>動画レビュー</h2>
+            <h2>動画投稿</h2>
           </div>
 
           {video && (
@@ -68,60 +69,39 @@ export default function VideoReview() {
             </>
           )}
 
-          <div className="rating-section">
-            <h4>評価</h4>
-            <div className="stars">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <FaStar
-                  key={star}
-                  className={`star ${star <= (hoveredStar || rating) ? "active" : ""}`}
-                  onClick={() => setRating(star)}
-                  onMouseEnter={() => setHoveredStar(star)}
-                  onMouseLeave={() => setHoveredStar(0)}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="review-section">
-            <h4>レビュー</h4>
+          <div className="post-section">
+            <h4>投稿</h4>
             <textarea
-              value={review}
-              onChange={(e) => setReview(e.target.value)}
+              value={post}
+              onChange={(e) => setPost(e.target.value)}
               placeholder="この動画についてどう思いましたか？"
               rows="5"
             />
           </div>
 
-          <div className="review-actions">
+          <div className="post-actions">
             <button
-              onClick={handleSubmitReview}
+              onClick={handleSubmitPost}
               className="comment-btn submit-btn"
-              disabled={!rating || !review.trim()}
+              disabled={!post.trim()}
             >
-              レビューを投稿
+              投稿する
             </button>
           </div>
 
-          {reviews.length > 0 && (
-            <div className="review-list">
-              <h4 className="review-list-title">この動画のレビュー</h4>
-              {reviews.map((r) => (
-                <div key={r.timestamp} className="review-item">
-                  <div className="review-item-header">
-                    <span className="review-item-title">{r.videoTitle}</span>
-                    <span className="review-item-date">{formatDate(r.timestamp)}</span>
+          {posts.length > 0 && (
+            <div className="post-list">
+              <h4 className="post-list-title">この動画の投稿</h4>
+              {posts.map((p) => (
+                <div key={p.id} className="post-item">
+                  <div className="post-item-header">
+                    <span className="post-author">{p.author}</span>
+                    <span className="post-date">{formatDate(p.timestamp)}</span>
                   </div>
-                  <div className="review-item-rating">
-                    {Array.from({ length: 5 }, (_, i) => (
-                      <FaStar
-                        key={i}
-                        className={`star ${i + 1 <= r.rating ? "active" : ""}`}
-                      />
-                    ))}
-                    <span className="review-item-rating-text">{r.rating}/5</span>
+                  <p className="post-content">{p.content}</p>
+                  <div className="post-likes">
+                    <span>❤️  いいね</span>
                   </div>
-                  <p className="review-item-text">{r.review}</p>
                 </div>
               ))}
             </div>
