@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaClock } from "react-icons/fa";
+import { getVideos } from '../lib/videoData';
 import "../styles/VideoHistory.css";
 import "../styles/Dashboard.css"; 
 
@@ -8,12 +9,13 @@ export default function VideoHistory() {
   const navigate = useNavigate();
   const [videoHistory, setVideoHistory] = useState([]);
 
-  // Load video history from localStorage
+  // Load video data from library instead of localStorage
   useEffect(() => {
-    const savedHistory = localStorage.getItem('videoHistory');
-    if (savedHistory) {
-      setVideoHistory(JSON.parse(savedHistory));
-    }
+    // Get all videos from library (both yoga and gym)
+    const yogaVideos = getVideos(5);
+    const gymVideos = getVideos(6);
+    const allVideos = [...yogaVideos, ...gymVideos];
+    setVideoHistory(allVideos);
   }, []);
 
   const formatDate = (timestamp) => {
@@ -30,6 +32,12 @@ export default function VideoHistory() {
     navigate('/video-player', { state: { video } });
   };
 
+  const handleClearHistory = () => {
+    setVideoHistory([]);
+    // Also clear from localStorage if it exists
+    localStorage.removeItem('videoHistory');
+  };
+
   return (
     <div className="dashboard-container">
       <header className="dashboard-header video-history-header">
@@ -40,6 +48,14 @@ export default function VideoHistory() {
           >
             ← 動画視聴履歴
           </button>
+          {videoHistory.length > 0 && (
+            <button 
+              className="clear-btn" 
+              onClick={handleClearHistory}
+            >
+              履歴をクリア
+            </button>
+          )}
         </div>
       </header>
 
@@ -75,23 +91,27 @@ export default function VideoHistory() {
                   />
                 </div>
               )}
-                          <button 
-              className="review-button"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate('/post', { 
-                  state: { 
-                    videoUrl: video.videoUrl || video.url,
-                    location: video.location || video.address || '', // Try multiple possible location properties
-                    locationName: video.locationName || video.name || video.title || '', // Add location name if available
-                    thumbnail: video.thumbnail || '',
-                    title: video.title || '無題の動画'
-                  } 
-                });
-              }}
-            >
-              レビューを書く
-            </button>
+              <button 
+                className="review-button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate('/video-review', { 
+                    state: { 
+                      video: {
+                        id: video.id || Date.now(),
+                        title: video.title || '無題の動画',
+                        thumbnail: video.thumbnail || '',
+                        url: video.videoUrl || video.url,
+                        description: video.description || '',
+                        category: video.category || 'ヨガ',
+                        uploadDate: video.uploadDate || video.timestamp
+                      }
+                    } 
+                  });
+                }}
+              >
+                レビューを書く
+              </button>
             </div>
           ))
         )}

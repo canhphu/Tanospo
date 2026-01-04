@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { authAPI } from "../api/auth";
 import "../styles/ProfilePage.css";
 
 function fixUnicode(str) {
@@ -13,11 +12,10 @@ function fixUnicode(str) {
 }
 
 export default function ProfilePage() {
-  const { user, logout, authenticate } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [postDescription, setPostDescription] = useState("まだ投稿はありません。");
-  const [profile, setProfile] = useState(null);
 
   const handleLogout = () => {
     logout();
@@ -65,27 +63,6 @@ export default function ProfilePage() {
     }
   }, []);
 
-  // Prevent multiple requests (React 18 StrictMode runs effects twice in dev)
-  const fetchedRef = useRef(false);
-  useEffect(() => {
-    if (fetchedRef.current) return;
-    fetchedRef.current = true;
-    const loadProfile = async () => {
-      try {
-        const p = await authAPI.getProfile();
-        setProfile(p);
-        // keep existing token and update local user for consistency
-        if (user?.token) {
-          authenticate({ ...p, token: user.token });
-        }
-      } catch (e) {
-        // ignore if unauthorized (no token)
-        console.debug('Profile fetch failed or unauthorized:', e.message);
-      }
-    };
-    loadProfile();
-  }, []);
-
   if (!user) {
     return <div className="loading">Loading...</div>;
   }
@@ -101,16 +78,16 @@ export default function ProfilePage() {
       {/* USER INFO */}
       <div className="user-info">
         <img
-          src={(profile?.avatarUrl) || user.picture || "https://picsum.photos/seed/avatar123/48/48.jpg"}
+          src={user.picture || "https://picsum.photos/seed/avatar123/48/48.jpg"}
           alt="avatar"
           className="user-avatar"
         />
 
         <div className="user-text">
           <h2 className="user-name">
-            {fixUnicode((profile?.name) || user.name || user.email?.split("@")[0] || "User")}
+            {fixUnicode(user.name || user.email?.split("@")[0] || "User")}
           </h2>
-          <p className="user-email">{(profile?.email) || user.email}</p>
+          <p className="user-email">{user.email}</p>
         </div>
       </div>
 
