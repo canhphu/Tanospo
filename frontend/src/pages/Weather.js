@@ -15,13 +15,53 @@ export default function Weather() {
   const [selectedSport, setSelectedSport] = useState('');
   const location = useLocation();
   const sportId = location.state?.sportId;
-  
+
+  // Remove duplicate locations by id or by name+coords
+  const normalizeName = useCallback((name = '') => {
+    let n = name.toString().trim().toLowerCase();
+    // strip common Japanese location suffixes/particles to normalize variants
+    n = n.replace(/にて$|に$|での$|で$|の$|付近$|周辺$|近く$/g, '');
+    n = n.replace(/\s+/g, '');
+    n = n.replace(/[^a-z0-9\u3000-\u303F\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/g, '');
+    return n;
+  }, []);
+
+  const roundCoord = useCallback((n) => (typeof n === 'number' ? Number(n.toFixed(4)) : ''), []);
+
+  const uniqLocations = useCallback((list) => {
+    const map = new Map();
+
+    list.forEach(l => {
+      const idKey = l.id != null ? String(l.id) : null;
+      const nameKey = normalizeName(l.name);
+      const latKey = roundCoord(l.lat);
+      const lngKey = roundCoord(l.lng);
+      const key = idKey || `${nameKey}_${latKey}_${lngKey}`;
+      if (!map.has(key)) map.set(key, l);
+    });
+
+    return Array.from(map.values());
+  }, [normalizeName, roundCoord]);
+
+  // Deduplicate by normalized name, keeping the first (closest) occurrence
+  const dedupeByNameKeepingClosest = useCallback((list) => {
+    const seen = new Set();
+    const out = [];
+    for (const item of list) {
+      const key = normalizeName(item.name);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(item);
+    }
+    return out;
+  }, [normalizeName]);
+
   // Filter locations based on selected sport
   useEffect(() => {
     if (sportId) {
       const filtered = locations.filter(loc => loc.sportIds.includes(sportId));
-      setFilteredLocations(filtered);
-      
+      setFilteredLocations(uniqLocations(filtered));
+
       // Set the sport name for display
       const sports = [
         { id: 1, name: "ウォーキング" },
@@ -34,7 +74,7 @@ export default function Weather() {
       const sport = sports.find(s => s.id === sportId);
       setSelectedSport(sport ? sport.name : '');
     } else {
-      setFilteredLocations(locations); // Show all locations if no sport is selected
+      setFilteredLocations(uniqLocations(locations)); // Show all locations if no sport is selected
     }
   }, [sportId]);
 
@@ -66,10 +106,12 @@ export default function Weather() {
           };
         })
         .sort((a, b) => a.distance - b.distance); // Sort by distance in ascending order
-      setFilteredLocations(adapted);
+
+      // adapted is already sorted by distance; keep only first occurrence per normalized name
+      setFilteredLocations(dedupeByNameKeepingClosest(adapted));
     } catch (e) {
       console.warn('Nearby locations failed, falling back to static:', e.message);
-      setFilteredLocations(locations);
+      setFilteredLocations(uniqLocations(locations));
     }
   }, []);
 
@@ -230,7 +272,7 @@ export default function Weather() {
             : loc.distance;
           
           return (
-            <div key={loc.id} className="item">
+            <div key={loc.id ?? `${loc.name}_${loc.lat}_${loc.lng}`} className="item">
               <div className="info">
                 <span className="pin">📍</span>
                 <span className="text">目的地：{loc.name}</span>
