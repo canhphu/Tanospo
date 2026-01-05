@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { locations } from '../lib/locationsData';
 import { postsAPI } from '../api/posts';
+import { usersAPI } from '../api/users';
 import '../styles/LocationDetailPage.css';
 
 // Calculate distance between two coordinates (Haversine formula)
@@ -57,29 +58,72 @@ export default function LocationDetailPage() {
     
     setLocation(foundLocation);
     
-    if (foundLocation) {
-      // Fetch posts and filter by location match (content or `locationId` string match)
-      postsAPI.getAll({ limit: 50, offset: 0 })
-        .then(all => {
-          const adapted = (all || []).map(p => ({
+    if (foundLocation && locationId) {
+      // Use the new getByLocation API method
+      postsAPI.getByLocation(locationId)
+        .then(async (locationPosts) => {
+          // Get unique user IDs from posts
+          const uniqueUserIds = Array.from(new Set((locationPosts || []).map(p => p.userId).filter(Boolean)));
+          const userMap = {};
+          
+          // Fetch user data for all authors
+          await Promise.all(uniqueUserIds.map(async (uid) => {
+            try {
+              const u = await usersAPI.getById(uid);
+              userMap[uid] = u;
+            } catch { /* ignore missing users */ }
+          }));
+          
+          // Adapt posts for display
+          const adapted = (locationPosts || []).map(p => ({
             id: p.id,
             author: {
-              name: p.userId?.slice(0, 6) || 'ユーザー',
-              avatar: 'https://picsum.photos/seed/avatar123/36/48.jpg',
-              location: p.locationId || '—',
+              name: (userMap[p.userId]?.name) || (userMap[p.userId]?.email?.split('@')[0]) || 'ユーザー',
+              avatar: userMap[p.userId]?.avatarUrl || 'https://picsum.photos/seed/avatar123/36/48.jpg',
+              location: foundLocation.name,
             },
             content: p.content,
             image: p.imageUrl ? { src: p.imageUrl, alt: 'post' } : null,
             timestamp: p.createdAt || new Date().toISOString(),
             likes: Array.isArray(p.likedBy) ? p.likedBy.length : 0,
           }));
-          const locationPosts = adapted.filter(post => 
-            (typeof post.author.location === 'string' && post.author.location.includes(foundLocation.name)) ||
-            (typeof post.content === 'string' && post.content.includes(foundLocation.name))
-          );
-          setPosts(locationPosts);
+          
+          setPosts(adapted);
         })
-        .catch(err => console.error('Failed to load posts for location:', err));
+        .catch(err => {
+          console.error('Failed to load posts for location:', err);
+          // Fallback to filtering all posts if the specific endpoint fails
+          postsAPI.getAll({ limit: 50, offset: 0 })
+            .then(async (all) => {
+              const filtered = (all || []).filter(p => p.locationId === locationId);
+              
+              const uniqueUserIds = Array.from(new Set(filtered.map(p => p.userId).filter(Boolean)));
+              const userMap = {};
+              
+              await Promise.all(uniqueUserIds.map(async (uid) => {
+                try {
+                  const u = await usersAPI.getById(uid);
+                  userMap[uid] = u;
+                } catch { /* ignore */ }
+              }));
+              
+              const adapted = filtered.map(p => ({
+                id: p.id,
+                author: {
+                  name: (userMap[p.userId]?.name) || (userMap[p.userId]?.email?.split('@')[0]) || 'ユーザー',
+                  avatar: userMap[p.userId]?.avatarUrl || 'https://picsum.photos/seed/avatar123/36/48.jpg',
+                  location: foundLocation.name,
+                },
+                content: p.content,
+                image: p.imageUrl ? { src: p.imageUrl, alt: 'post' } : null,
+                timestamp: p.createdAt || new Date().toISOString(),
+                likes: Array.isArray(p.likedBy) ? p.likedBy.length : 0,
+              }));
+              
+              setPosts(adapted);
+            })
+            .catch(fallbackErr => console.error('Fallback also failed:', fallbackErr));
+        });
     }
     
     setLoading(false);
@@ -142,14 +186,6 @@ export default function LocationDetailPage() {
               <span className="meta-label">住所:</span>
               <span className="meta-value">{location.address}</span>
             </div>
-            {/*<div className="meta-item">
-              <span className="meta-label">営業時間:</span>
-              <span className="meta-value">{location.hours || '情報なし'}</span>
-            </div>
-            <div className="meta-item">
-              <span className="meta-label">アクセス:</span>
-              <span className="meta-value">{location.access || '情報なし'}</span>
-            </div> */}
             <div className="meta-item">
               <span className="meta-label">距離:</span>
               <span className="meta-value">{getDistance()}</span>
