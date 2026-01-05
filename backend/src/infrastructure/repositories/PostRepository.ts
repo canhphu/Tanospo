@@ -159,4 +159,14 @@ export class PostRepository implements IPostRepository {
     if (!saved) throw new Error('Failed to save comment');
     return mapComment(saved);
   }
+
+  async findLikedByUserId(userId: string): Promise<Post[]> {
+    const db = await getDb();
+    const docs = await db
+      .collection(this.collection)
+      .find({ likedBy: userId }) 
+      .sort({ createdAt: -1 })
+      .toArray();
+    return docs.map(mapPost);
+  }
 }

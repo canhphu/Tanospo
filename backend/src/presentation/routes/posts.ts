@@ -8,6 +8,7 @@ import { TogglePostLike } from '../../application/useCases/TogglePostLike';
 import { AddComment } from '../../application/useCases/AddComment';
 import { GetPostComment } from '../../application/useCases/GetPostComment';
 import { JwtService } from '../../application/services/JwtService';
+import { GetUserLikedPost } from '../../application/useCases/GetUserLikedPost';
 
 const router = Router();
 
@@ -74,6 +75,26 @@ router.get('/user/:userId', async (req: Request, res: Response, next: NextFuncti
     const result = await useCase.execute({
       userId: req.params.userId,
     });
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/liked', authMiddleware, async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    // 1. Ensure userId exists (provided by authMiddleware)
+    if (!req.userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const useCase = container.resolve(GetUserLikedPost);
+    
+    // 2. Pass the authenticated user's ID to the use case
+    const result = await useCase.execute({
+      userId: req.userId, 
+    });
+    
     res.json(result);
   } catch (error) {
     next(error);
