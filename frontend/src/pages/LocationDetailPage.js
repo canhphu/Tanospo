@@ -100,13 +100,17 @@ export default function LocationDetailPage() {
               <span className="meta-label">住所:</span>
               <span className="meta-value">{location.address}</span>
             </div>
-            <div className="meta-item">
+            {/*<div className="meta-item">
               <span className="meta-label">営業時間:</span>
               <span className="meta-value">{location.hours || '情報なし'}</span>
             </div>
             <div className="meta-item">
               <span className="meta-label">アクセス:</span>
               <span className="meta-value">{location.access || '情報なし'}</span>
+            </div> */}
+            <div className="meta-item">
+              <span className="meta-label">距離:</span>
+              <span className="meta-value">{location.distance}</span>
             </div>
           </div>
         </div>
@@ -115,7 +119,7 @@ export default function LocationDetailPage() {
         <div className="action-buttons">
           <button className="btn-review" onClick={handleReadPosts}>
             この場所の投稿を見る
-          </button>
+          </button> 
           <button className="btn-maps" onClick={handleViewOnGoogleMaps}>
            マップで見る
           </button>

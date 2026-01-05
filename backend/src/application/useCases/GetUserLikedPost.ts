@@ -6,17 +6,17 @@ const schema = z.object({
   userId: z.string(),
 });
 
-export type GetUserPostInput = z.infer<typeof schema>;
+export type GetUserLikedPostInput = z.infer<typeof schema>;
 
 @injectable()
-export class GetUserPost {
+export class GetUserLikedPost {
   constructor(
     @inject('PostRepository') private readonly posts: IPostRepository
   ) {}
 
-  async execute(payload: GetUserPostInput) {
+  async execute(payload: GetUserLikedPostInput) {
     const data = schema.parse(payload);
-    const posts = await this.posts.findByUserId(data.userId);
+    const posts = await this.posts.findLikedByUserId(data.userId);
     if (!posts) {
       throw new Error('Posts not found');
     }
