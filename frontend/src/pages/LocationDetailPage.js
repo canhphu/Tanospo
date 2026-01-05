@@ -59,23 +59,22 @@ export default function LocationDetailPage() {
     setLocation(foundLocation);
     
     if (foundLocation && locationId) {
-      // Use the new getByLocation API method
-      postsAPI.getByLocation(locationId)
-        .then(async (locationPosts) => {
-          // Get unique user IDs from posts
-          const uniqueUserIds = Array.from(new Set((locationPosts || []).map(p => p.userId).filter(Boolean)));
+      // Fetch all posts then filter by this locationId
+      postsAPI.getAll({ limit: 100, offset: 0 })
+        .then(async (allPosts) => {
+          const locationPosts = (allPosts || []).filter(p => p.locationId === locationId);
+
+          const uniqueUserIds = Array.from(new Set(locationPosts.map(p => p.userId).filter(Boolean)));
           const userMap = {};
-          
-          // Fetch user data for all authors
+
           await Promise.all(uniqueUserIds.map(async (uid) => {
             try {
               const u = await usersAPI.getById(uid);
               userMap[uid] = u;
             } catch { /* ignore missing users */ }
           }));
-          
-          // Adapt posts for display
-          const adapted = (locationPosts || []).map(p => ({
+
+          const adapted = locationPosts.map(p => ({
             id: p.id,
             author: {
               name: (userMap[p.userId]?.name) || (userMap[p.userId]?.email?.split('@')[0]) || 'ユーザー',
@@ -87,42 +86,11 @@ export default function LocationDetailPage() {
             timestamp: p.createdAt || new Date().toISOString(),
             likes: Array.isArray(p.likedBy) ? p.likedBy.length : 0,
           }));
-          
+
           setPosts(adapted);
         })
         .catch(err => {
-          console.error('Failed to load posts for location:', err);
-          // Fallback to filtering all posts if the specific endpoint fails
-          postsAPI.getAll({ limit: 50, offset: 0 })
-            .then(async (all) => {
-              const filtered = (all || []).filter(p => p.locationId === locationId);
-              
-              const uniqueUserIds = Array.from(new Set(filtered.map(p => p.userId).filter(Boolean)));
-              const userMap = {};
-              
-              await Promise.all(uniqueUserIds.map(async (uid) => {
-                try {
-                  const u = await usersAPI.getById(uid);
-                  userMap[uid] = u;
-                } catch { /* ignore */ }
-              }));
-              
-              const adapted = filtered.map(p => ({
-                id: p.id,
-                author: {
-                  name: (userMap[p.userId]?.name) || (userMap[p.userId]?.email?.split('@')[0]) || 'ユーザー',
-                  avatar: userMap[p.userId]?.avatarUrl || 'https://picsum.photos/seed/avatar123/36/48.jpg',
-                  location: foundLocation.name,
-                },
-                content: p.content,
-                image: p.imageUrl ? { src: p.imageUrl, alt: 'post' } : null,
-                timestamp: p.createdAt || new Date().toISOString(),
-                likes: Array.isArray(p.likedBy) ? p.likedBy.length : 0,
-              }));
-              
-              setPosts(adapted);
-            })
-            .catch(fallbackErr => console.error('Fallback also failed:', fallbackErr));
+          console.error('Failed to load posts:', err);
         });
     }
     
