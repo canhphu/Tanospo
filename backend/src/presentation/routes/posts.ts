@@ -61,6 +61,7 @@ router.post('/', authMiddleware, async (req: AuthenticatedRequest, res: Response
       locationId: req.body.locationId,
       content: req.body.content,
       imageUrl: req.body.imageUrl,
+      videoUrl: req.body.videoUrl,
     });
     res.status(201).json(result);
   } catch (error) {

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { postsAPI } from "../api/posts";
+import { locationsAPI } from "../api/locations";
 import "../styles/Dashboard.css";
 
 export default function MyPost() {
@@ -24,15 +25,24 @@ export default function MyPost() {
       try {
         if (!user) return;
         const list = await postsAPI.getByUser(user.id || user.userId || '');
+        const uniqueLocationIds = Array.from(new Set((list || []).map(p => p.locationId).filter(id => !!id)));
+        const locationMap = {};
+        await Promise.all(uniqueLocationIds.map(async (lid) => {
+          try {
+            const l = await locationsAPI.getById(lid);
+            locationMap[lid] = l;
+          } catch { /* ignore missing locations */ }
+        }));
         const adapted = (list || []).map(p => ({
           id: p.id,
           author: {
             name: user.name || user.email?.split('@')[0] || 'ユーザー',
             avatar: 'https://picsum.photos/seed/avatar123/36/48.jpg',
-            location: p.locationId || '—',
+            location: locationMap[p.locationId]?.name || '—',
           },
           content: p.content,
           image: p.imageUrl ? { src: p.imageUrl, alt: 'post' } : null,
+          videoUrl: p.videoUrl,
           timestamp: p.createdAt || new Date().toISOString(),
           likes: Array.isArray(p.likedBy) ? p.likedBy.length : 0,
         }));
@@ -166,6 +176,19 @@ export default function MyPost() {
                     alt={post.image.alt}
                     className="review-image"
                   />
+                )}
+                {post.videoUrl && (
+                  <a 
+                    href={post.videoUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="video-link"
+                    style={{ display: 'block', marginTop: '10px' }}
+                  >
+                    <button style={{ padding: '8px 16px', background: '#ff0000', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                      YouTube で見る
+                    </button>
+                  </a>
                 )}
               </div>
             </div>

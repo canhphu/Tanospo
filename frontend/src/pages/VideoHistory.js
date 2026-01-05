@@ -29,7 +29,13 @@ export default function VideoHistory() {
   };
 
   const handlePlayVideo = (video) => {
-    navigate('/video-player', { state: { video } });
+    // Open YouTube URL in new tab
+    const youtubeUrl = video.youtubeUrl || video.url || video.videoUrl;
+    if (youtubeUrl) {
+      window.open(youtubeUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      console.error('No YouTube URL found for video:', video);
+    }
   };
 
   const handleClearHistory = () => {

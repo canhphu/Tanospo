@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { FaHeart, FaRegHeart } from "react-icons/fa";
+import { FaHeart, FaRegHeart, FaYoutube } from "react-icons/fa";
 import { postsAPI } from "../api/posts";
 import { usersAPI } from "../api/users";
 import { locationsAPI } from "../api/locations";
@@ -68,6 +68,7 @@ export default function Dashboard() {
           },
           content: p.content,
           image: p.imageUrl ? { src: p.imageUrl, alt: 'post' } : null,
+          videoUrl: p.videoUrl,
           timestamp: p.createdAt || new Date().toISOString(),
           likes: Array.isArray(p.likedBy) ? p.likedBy.length : 0,
         }));
@@ -236,6 +237,19 @@ export default function Dashboard() {
                   alt={post.image.alt}
                   className="review-image"
                 />
+              )}
+              {post.videoUrl && (
+                <a 
+                  href={post.videoUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="video-link"
+                  style={{ display: 'block', marginTop: '10px', textAlign: 'center' }}
+                >
+                  <button style={{ padding: '8px 16px', background: '#ff0000', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                    <FaYoutube /> YouTube で見る
+                  </button>
+                </a>
               )}
             </div>
           </div>
