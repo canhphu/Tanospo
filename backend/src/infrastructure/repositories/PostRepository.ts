@@ -12,6 +12,7 @@ const mapPost = (doc: any): Post => {
     locationId: doc.locationId,
     content: doc.content,
     imageUrl: doc.imageUrl,
+    videoUrl: doc.videoUrl,
     likedBy: doc.likedBy || [],
     createdAt: doc.createdAt || new Date(),
     updatedAt: doc.updatedAt || new Date(),
@@ -78,6 +79,7 @@ export class PostRepository implements IPostRepository {
       locationId: doc.locationId,
       content: doc.content,
       imageUrl: doc.imageUrl,
+      videoUrl: doc.videoUrl,
       likedBy: doc.likedBy,
       updatedAt: now,
     };

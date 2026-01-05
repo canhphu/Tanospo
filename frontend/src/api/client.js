@@ -1,4 +1,4 @@
-const API_BASE = process.env.REACT_APdP_API_URL || 'https://tanospo.onrender.com/api';
+const API_BASE = process.env.REACT_APP_API_URL || 'https://tanospo.onrender.com/api';
 
 // Read auth token from localStorage
 const getAuthToken = () => {

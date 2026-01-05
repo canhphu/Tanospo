@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb';
 
-export type PostType = 'checkin' | 'review' | 'photo' | 'status';
+export type PostType = 'checkin' | 'review' | 'photo' | 'status' | 'video';
 
 export interface PostProps {
   _id?: ObjectId;
@@ -10,6 +10,7 @@ export interface PostProps {
   locationId?: string;
   content: string;
   imageUrl?: string;
+  videoUrl?: string;
   likedBy: string[]; 
   createdAt: Date;
   updatedAt: Date;
@@ -40,6 +41,10 @@ export class Post {
 
   get imageUrl(): string | undefined {
     return this.props.imageUrl;
+  }
+
+  get videoUrl(): string | undefined {
+    return this.props.videoUrl;
   }
 
   get likedBy(): string[] {

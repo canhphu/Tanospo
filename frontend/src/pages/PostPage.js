@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { postsAPI } from "../api/posts";
+import { locationsAPI } from "../api/locations";
 import "../styles/PostPage.css";
 import { locations } from "../lib/locationsData";
 
@@ -8,9 +11,21 @@ const formatLocation = (location) => {
   return `${location.name}, ${location.address}`;
 };
 
+// Convert file to base64 data URL
+const fileToBase64 = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
 export default function PostPage() {
-  const [image, setImage] = useState(null);
-  const [location, setLocation] = useState("");
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [locationText, setLocationText] = useState("");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -19,6 +34,7 @@ export default function PostPage() {
   const suggestionsRef = useRef(null);
 
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -36,30 +52,84 @@ export default function PostPage() {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setImage(URL.createObjectURL(file));
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
     }
   };
-    const handleSubmit = async () => {
+  const handleSubmit = async () => {
+    if (!user) {
+      alert("投稿するにはログインが必要です。");
+      navigate("/login");
+      return;
+    }
+
+    if (!content.trim() && !title.trim()) {
+      alert("コンテンツを入力してください。");
+      return;
+    }
+
     try {
       setIsSubmitting(true);
-      // Handle form submission here
-      console.log('Submitting post:', { title, content, location, image });
-      // Add your API call here
-      // await postAPI.create({ title, content, location, image });
-      navigate('/dashboard');
+
+      // Convert image file to base64 data URL if exists
+      let imageUrl = undefined;
+      if (imageFile) {
+        imageUrl = await fileToBase64(imageFile);
+      }
+
+      // Handle location: create or find location in backend
+      let locationId = undefined;
+      if (selectedLocation) {
+        try {
+          // Try to create location in backend (will upsert if exists)
+          const locationData = {
+            name: selectedLocation.name,
+            address: selectedLocation.address,
+            latitude: selectedLocation.lat,
+            longitude: selectedLocation.lng,
+            type: 'other', // Default type, can be improved later
+            description: selectedLocation.description,
+            amenities: selectedLocation.facilities || [],
+            imageUrl: selectedLocation.image,
+          };
+          const createdLocation = await locationsAPI.create(locationData);
+          locationId = createdLocation.id;
+        } catch (error) {
+          console.error("Error creating/finding location:", error);
+          // Continue without locationId if location creation fails
+        }
+      }
+
+      // Backend requires: postType, content (required), optional imageUrl & locationId.
+      // Backend doesn't have title field, so include it in content if provided.
+      const payloadContent = title
+        ? `${title}\n\n${content}`.trim()
+        : content.trim();
+
+      await postsAPI.create({
+        postType: "status",
+        content: payloadContent,
+        imageUrl: imageUrl,
+        locationId: locationId,
+      });
+
+      navigate("/dashboard");
     } catch (error) {
-      console.error('Error submitting post:', error);
+      console.error("Error submitting post:", error);
+      alert("投稿に失敗しました。もう一度お試しください。");
     } finally {
       setIsSubmitting(false);
     }
   };
-   const handleBack = () => {
+
+  const handleBack = () => {
     navigate(-1);
   };
 
   const handleLocationChange = (e) => {
     const value = e.target.value;
-    setLocation(value);
+    setLocationText(value);
+    setSelectedLocation(null); // Clear selected location when user types
     
     if (value.length > 0) {
       const filtered = locations.filter(loc => 
@@ -75,7 +145,8 @@ export default function PostPage() {
   };
 
   const handleSuggestionClick = (location) => {
-    setLocation(formatLocation(location));
+    setSelectedLocation(location);
+    setLocationText(formatLocation(location));
     setShowSuggestions(false);
   };
 
@@ -88,7 +159,7 @@ export default function PostPage() {
       <div className="image-upload-wrapper">
         <label htmlFor="imageUpload">
           <img
-            src={image || "/placeholder.png"}
+            src={imagePreview || "/placeholder.png"}
             alt="upload preview"
             className="preview-image"
           />
@@ -114,7 +185,7 @@ export default function PostPage() {
           <input 
             type="text" 
             className="input-box" 
-            value={location}
+            value={locationText}
             onChange={handleLocationChange}
             placeholder="場所を入力..."
             onFocus={() => setShowSuggestions(suggestions.length > 0)}
@@ -145,7 +216,13 @@ export default function PostPage() {
           value={content}
           onChange={(e) => setContent(e.target.value)}
         />
-        <button className="submit-button">投稿</button>
+        <button 
+          className="submit-button"
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "投稿中..." : "投稿"}
+        </button>
       </div>
     </div>
   );

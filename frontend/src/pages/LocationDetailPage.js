@@ -4,6 +4,19 @@ import { locations } from '../lib/locationsData';
 import { postsAPI } from '../api/posts';
 import '../styles/LocationDetailPage.css';
 
+// Calculate distance between two coordinates (Haversine formula)
+const calculateDistance = (lat1, lng1, lat2, lng2) => {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in km
+};
+
 export default function LocationDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -11,6 +24,24 @@ export default function LocationDetailPage() {
   const [location, setLocation] = useState(null);
   const [loading, setLoading] = useState(true);
   const [posts, setPosts] = useState([]);
+  const [userLocation, setUserLocation] = useState(null);
+  const [showPosts, setShowPosts] = useState(false);
+
+  useEffect(() => {
+    // Get user location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        },
+        () => {
+          setUserLocation({ lat: 21.0285, lng: 105.8542 }); // Fallback to Hanoi
+        }
+      );
+    } else {
+      setUserLocation({ lat: 21.0285, lng: 105.8542 });
+    }
+  }, []);
 
   useEffect(() => {
     let foundLocation = null;
@@ -58,8 +89,19 @@ export default function LocationDetailPage() {
     navigate(-1);
   };
 
-  const handleReadPosts = () => {
-    document.getElementById('posts-section').scrollIntoView({ behavior: 'smooth' });
+  const handleTogglePosts = () => {
+    setShowPosts(!showPosts);
+  };
+
+  const getDistance = () => {
+    if (!userLocation || !location || !location.lat || !location.lng) {
+      return location?.distance || '不明';
+    }
+    const distance = calculateDistance(userLocation.lat, userLocation.lng, location.lat, location.lng);
+    if (distance < 1) {
+      return `${Math.round(distance * 1000)}m`;
+    }
+    return `${distance.toFixed(1)}km`;
   };
 
   const handleViewOnGoogleMaps = () => {
@@ -110,23 +152,24 @@ export default function LocationDetailPage() {
             </div> */}
             <div className="meta-item">
               <span className="meta-label">距離:</span>
-              <span className="meta-value">{location.distance}</span>
+              <span className="meta-value">{getDistance()}</span>
             </div>
           </div>
         </div>
 
         {/* Action Buttons */}
         <div className="action-buttons">
-          <button className="btn-review" onClick={handleReadPosts}>
-            この場所の投稿を見る
+          <button className="btn-review" onClick={handleTogglePosts}>
+            {showPosts ? '投稿を隠す' : 'この場所の投稿を見る'}
           </button> 
           <button className="btn-maps" onClick={handleViewOnGoogleMaps}>
-           マップで見る
+            マップで見る
           </button>
         </div>
       </div>
 
       {/* Posts Section */}
+      {showPosts && (
       <div id="posts-section" className="posts-section">
         <h2 className="posts-title">この場所の投稿</h2>
         
@@ -166,6 +209,7 @@ export default function LocationDetailPage() {
           <p className="no-posts">この場所に関する投稿はまだありません</p>
         )}
       </div>
+      )}
     </div>
   );
 }

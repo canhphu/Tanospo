@@ -17,10 +17,10 @@ export const postsAPI = {
   },
 
   // POST /api/posts (requires auth)
-  create: async ({ postType = 'status', locationId, content, imageUrl }) => {
+  create: async ({ postType = 'status', locationId, content, imageUrl, videoUrl }) => {
     return authFetch('/posts', {
       method: 'POST',
-      body: JSON.stringify({ postType, locationId, content, imageUrl }),
+      body: JSON.stringify({ postType, locationId, content, imageUrl, videoUrl }),
     });
   },
 

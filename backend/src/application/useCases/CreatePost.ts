@@ -6,10 +6,11 @@ import { z } from 'zod';
 
 const schema = z.object({
   userId: z.string(),
-  postType: z.enum(['checkin', 'review', 'photo', 'status']),
+  postType: z.enum(['checkin', 'review', 'photo', 'status', 'video']),
   locationId: z.string().optional(),
   content: z.string().min(1, 'Content cannot be empty'),
   imageUrl: z.string().optional(),
+  videoUrl: z.string().optional(),
 });
 
 export type CreatePostInput = z.infer<typeof schema>;
@@ -45,6 +46,7 @@ export class CreatePost {
       locationId: data.locationId,
       content: data.content,
       imageUrl: data.imageUrl,
+      videoUrl: data.videoUrl,
       likedBy: [],
       createdAt: now,
       updatedAt: now,
