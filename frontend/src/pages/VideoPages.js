@@ -45,21 +45,47 @@ export default function VideoPage() {
               <p>{video.description}</p>
               <div className="video-duration">{video.duration}</div>
             </div>
-            <button className="youtube" onClick={() => window.open(video.youtubeUrl, '_blank')}> <FaYoutube /></button>
             <button 
-              className="review-btn"
+              className="youtube" 
               onClick={() => {
-                // Add to video history
+                // Save to video history when clicking YouTube button
                 const currentHistory = JSON.parse(localStorage.getItem('videoHistory') || '[]');
-                const newEntry = {
+                const videoEntry = {
                   id: video.id,
                   title: video.title,
                   thumbnail: video.thumbnail,
                   youtubeUrl: video.youtubeUrl,
                   timestamp: Date.now()
                 };
-                const updatedHistory = [newEntry, ...currentHistory].slice(0, 20); // Keep last 20 videos
-                localStorage.setItem('videoHistory', JSON.stringify(updatedHistory));
+                // Check if already exists (by youtubeUrl) - only save once
+                const exists = currentHistory.some(v => v.youtubeUrl === video.youtubeUrl);
+                if (!exists) {
+                  const updatedHistory = [videoEntry, ...currentHistory].slice(0, 20);
+                  localStorage.setItem('videoHistory', JSON.stringify(updatedHistory));
+                }
+                window.open(video.youtubeUrl, '_blank');
+              }}
+            > 
+              <FaYoutube />
+            </button>
+            <button 
+              className="review-btn"
+              onClick={() => {
+                // Save to video history when clicking review button
+                const currentHistory = JSON.parse(localStorage.getItem('videoHistory') || '[]');
+                const videoEntry = {
+                  id: video.id,
+                  title: video.title,
+                  thumbnail: video.thumbnail,
+                  youtubeUrl: video.youtubeUrl,
+                  timestamp: Date.now()
+                };
+                // Check if already exists (by youtubeUrl) - only save once
+                const exists = currentHistory.some(v => v.youtubeUrl === video.youtubeUrl);
+                if (!exists) {
+                  const updatedHistory = [videoEntry, ...currentHistory].slice(0, 20);
+                  localStorage.setItem('videoHistory', JSON.stringify(updatedHistory));
+                }
                 // Navigate to video player or review page
                 navigate('/video-layer', { state: { video, sportId, sportName } });
               }}

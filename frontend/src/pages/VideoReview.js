@@ -32,7 +32,9 @@ export default function VideoReview() {
 
   useEffect(() => {
     if (video) {
-      setVideoUrl(video.youtubeUrl || video.url || video.videoUrl || "");
+      const url = video.youtubeUrl || video.url || video.videoUrl || "";
+      setVideoUrl(url);
+      // Disable editing if video URL exists
     }
   }, [video]);
 
@@ -85,8 +87,8 @@ export default function VideoReview() {
       return;
     }
 
-    if (!videoUrl.trim()) {
-      alert("YouTubeリンクを入力してください。");
+    if (!videoUrl || !videoUrl.trim()) {
+      alert("YouTubeリンクが必要です。");
       return;
     }
 
@@ -128,6 +130,8 @@ export default function VideoReview() {
       setImagePreview(null);
       
       alert("投稿が完了しました！");
+      // Navigate to dashboard after successful post
+      navigate("/dashboard");
     } catch (error) {
       console.error("Error submitting post:", error);
       alert("投稿に失敗しました。もう一度お試しください。");
@@ -178,17 +182,18 @@ export default function VideoReview() {
             />
           </div>
 
-          {/* YouTube Link */}
-          <div className="post-section">
-            <h4>YouTubeリンク</h4>
-            <input
-              type="text"
-              className="input-box"
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-              placeholder="https://www.youtube.com/watch?v=..."
-            />
-            {videoUrl && (
+          {/* YouTube Link - Read only */}
+          {videoUrl && (
+            <div className="post-section">
+              <h4>YouTubeリンク</h4>
+              <input
+                type="text"
+                className="input-box"
+                value={videoUrl}
+                readOnly
+                disabled
+                style={{ background: '#f5f5f5', cursor: 'not-allowed' }}
+              />
               <a 
                 href={videoUrl} 
                 target="_blank" 
@@ -199,8 +204,8 @@ export default function VideoReview() {
                   <FaYoutube /> YouTube で見る
                 </button>
               </a>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Title */}
           <div className="post-section">

@@ -33,19 +33,31 @@ export default function MyPost() {
             locationMap[lid] = l;
           } catch { /* ignore missing locations */ }
         }));
-        const adapted = (list || []).map(p => ({
-          id: p.id,
-          author: {
-            name: user.name || user.email?.split('@')[0] || 'ユーザー',
-            avatar: 'https://picsum.photos/seed/avatar123/36/48.jpg',
-            location: locationMap[p.locationId]?.name || '—',
-          },
-          content: p.content,
-          image: p.imageUrl ? { src: p.imageUrl, alt: 'post' } : null,
-          videoUrl: p.videoUrl,
-          timestamp: p.createdAt || new Date().toISOString(),
-          likes: Array.isArray(p.likedBy) ? p.likedBy.length : 0,
-        }));
+        // Parse title and content
+        const adapted = (list || []).map(p => {
+          let title = '';
+          let content = p.content || '';
+          const parts = content.split('\n\n');
+          if (parts.length >= 2 && parts[0].length < 100) {
+            title = parts[0].trim();
+            content = parts.slice(1).join('\n\n').trim();
+          }
+          
+          return {
+            id: p.id,
+            author: {
+              name: user.name || user.email?.split('@')[0] || 'ユーザー',
+              avatar: 'https://picsum.photos/seed/avatar123/36/48.jpg',
+              location: locationMap[p.locationId]?.name || '—',
+            },
+            title: title,
+            content: content,
+            image: p.imageUrl ? { src: p.imageUrl, alt: 'post' } : null,
+            videoUrl: p.videoUrl,
+            timestamp: p.createdAt || new Date().toISOString(),
+            likes: Array.isArray(p.likedBy) ? p.likedBy.length : 0,
+          };
+        });
         setMyPosts(adapted);
       } catch (e) {
         console.error('Failed to load my posts:', e);
@@ -153,6 +165,9 @@ export default function MyPost() {
                   />
                   <span className="review-name">{post.author.name} - {post.author.location}</span>
                 </div>
+                {post.title && (
+                  <h3 className="review-title" style={{ marginBottom: '10px', fontWeight: '600', fontSize: '18px' }}>{post.title}</h3>
+                )}
                 <p className="review-text">{post.content}</p>
                 <div className="review-actions">
                   {likedPosts.has(post.id) ? (

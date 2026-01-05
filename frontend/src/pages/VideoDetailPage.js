@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { postsAPI } from '../api/posts';
+import { usersAPI } from '../api/users';
 import '../styles/VideoDetailPage.css';
+
+// Extract YouTube video ID from URL
+const extractYouTubeId = (url) => {
+  if (!url) return '';
+  const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+  return match ? match[1] : '';
+};
 
 export default function VideoDetailPage() {
   const navigate = useNavigate();
@@ -15,30 +24,68 @@ export default function VideoDetailPage() {
       return;
     }
 
-    // Get video posts from localStorage
-    const stored = JSON.parse(localStorage.getItem("videoPosts") || "[]");
-    const videoPosts = stored.filter((p) => p.videoId === video.id);
+    // Load posts from backend
+    const loadPosts = async () => {
+      try {
+        const videoUrl = video.youtubeUrl || video.url || video.videoUrl;
+        const allPosts = await postsAPI.getAll({ limit: 50, offset: 0 });
+        
+        // Filter posts by videoUrl or video title in content
+        const videoPosts = (allPosts || []).filter(p => 
+          p.postType === 'video' && (
+            (videoUrl && p.videoUrl === videoUrl) ||
+            (video.title && p.content && p.content.includes(video.title))
+          )
+        );
+        
+        // Get user info for posts
+        const uniqueUserIds = Array.from(new Set(videoPosts.map(p => p.userId).filter(Boolean)));
+        const userMap = {};
+        await Promise.all(uniqueUserIds.map(async (uid) => {
+          try {
+            const u = await usersAPI.getById(uid);
+            userMap[uid] = u;
+          } catch { /* ignore */ }
+        }));
+        
+        // Adapt posts - parse title and content
+        const adaptedPosts = videoPosts.map(post => {
+          let title = '';
+          let content = post.content || '';
+          const parts = content.split('\n\n');
+          if (parts.length >= 2 && parts[0].length < 100) {
+            title = parts[0].trim();
+            content = parts.slice(1).join('\n\n').trim();
+          }
+          
+          return {
+            id: post.id,
+            author: {
+              name: (userMap[post.userId]?.name) || (userMap[post.userId]?.email?.split('@')[0]) || 'ユーザー',
+              avatar: userMap[post.userId]?.avatarUrl || 'https://picsum.photos/seed/avatar' + post.id + '/36/48.jpg',
+              location: '—',
+            },
+            title: title,
+            content: content,
+            image: post.imageUrl ? { src: post.imageUrl, alt: 'post' } : null,
+            videoUrl: post.videoUrl,
+            timestamp: post.createdAt || new Date().toISOString(),
+            likes: Array.isArray(post.likedBy) ? post.likedBy.length : 0,
+          };
+        });
+        
+        // Sort by timestamp (newest first)
+        adaptedPosts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        
+        setPosts(adaptedPosts);
+      } catch (e) {
+        console.error('Failed to load video posts:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    // Sort by timestamp (newest first)
-    videoPosts.sort((a, b) => b.timestamp - a.timestamp);
-    
-    // Adapt posts to match the format expected by the UI
-    const adaptedPosts = videoPosts.map(post => ({
-      id: post.id,
-      author: {
-        name: post.author || 'ユーザー',
-        avatar: 'https://picsum.photos/seed/avatar' + post.id + '/36/48.jpg',
-        location: '—',
-      },
-      content: post.content,
-      image: null, // Video posts don't have images
-      timestamp: post.timestamp,
-      likes: post.likes || 0,
-      comments: post.comments || []
-    }));
-    
-    setPosts(adaptedPosts);
-    setLoading(false);
+    loadPosts();
   }, [video]);
 
   const handleBack = () => {
@@ -105,10 +152,6 @@ export default function VideoDetailPage() {
           
           <div className="video-meta">
             <div className="meta-item">
-              <span className="meta-label">動画ID:</span>
-              <span className="meta-value">{video.id}</span>
-            </div>
-            <div className="meta-item">
               <span className="meta-label">カテゴリ:</span>
               <span className="meta-value">{video.category || 'ヨガ'}</span>
             </div>
@@ -139,6 +182,9 @@ export default function VideoDetailPage() {
                     <span className="post-location">{post.author.location}</span>
                   </div>
                 </div>
+                {post.title && (
+                  <h4 style={{ marginBottom: '8px', fontWeight: '600', fontSize: '16px' }}>{post.title}</h4>
+                )}
                 <p className="post-content">{post.content}</p>
                 {post.image && (
                   <img 
@@ -146,6 +192,36 @@ export default function VideoDetailPage() {
                     alt={post.image.alt} 
                     className="post-image"
                   />
+                )}
+                {post.videoUrl && (
+                  <div style={{ marginTop: '10px' }}>
+                    <a 
+                      href={post.videoUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{ display: 'inline-block' }}
+                      onClick={() => {
+                        // Save to video history
+                        const currentHistory = JSON.parse(localStorage.getItem('videoHistory') || '[]');
+                        const videoEntry = {
+                          id: post.id || Date.now(),
+                          title: post.title || post.content?.substring(0, 50) || '動画',
+                          thumbnail: post.image?.src || `https://img.youtube.com/vi/${extractYouTubeId(post.videoUrl)}/hqdefault.jpg`,
+                          youtubeUrl: post.videoUrl,
+                          timestamp: Date.now()
+                        };
+                        const exists = currentHistory.some(v => v.youtubeUrl === post.videoUrl);
+                        if (!exists) {
+                          const updatedHistory = [videoEntry, ...currentHistory].slice(0, 20);
+                          localStorage.setItem('videoHistory', JSON.stringify(updatedHistory));
+                        }
+                      }}
+                    >
+                      <button style={{ padding: '8px 16px', background: '#ff0000', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                        📺 YouTube で見る
+                      </button>
+                    </a>
+                  </div>
                 )}
                 
                 {/* Comments Section */}
