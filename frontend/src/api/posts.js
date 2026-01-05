@@ -29,10 +29,6 @@ export const postsAPI = {
     return authFetch(`/posts/${postId}/like`, { method: 'POST' });
   },
 
-  getByLocation: async (locationId) => {
-    return authFetch(`/posts/location/${locationId}`);
-  },
-
   // GET /api/posts/:postId/comments
   getComments: async (postId) => {
     return authFetch(`/posts/${postId}/comments`);
