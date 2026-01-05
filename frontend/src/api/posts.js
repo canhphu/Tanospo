@@ -41,4 +41,9 @@ export const postsAPI = {
       body: JSON.stringify({ content, rating }),
     });
   },
+
+  // GET /api/posts/liked (requires auth)
+  getLiked: async () => {
+    return authFetch('/posts/liked');
+  },
 };

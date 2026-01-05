@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { FaHeart, FaRegHeart } from "react-icons/fa";
+import { FaHeart, FaRegHeart, FaYoutube } from "react-icons/fa";
 import { postsAPI } from "../api/posts";
 import { locationsAPI } from "../api/locations";
 import "../styles/Dashboard.css";
+
+// Extract YouTube video ID from URL
+const extractYouTubeId = (url) => {
+  if (!url) return '';
+  const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+  return match ? match[1] : '';
+};
 
 export default function MyPost() {
   const navigate = useNavigate();
@@ -33,19 +40,31 @@ export default function MyPost() {
             locationMap[lid] = l;
           } catch { /* ignore missing locations */ }
         }));
-        const adapted = (list || []).map(p => ({
-          id: p.id,
-          author: {
-            name: user.name || user.email?.split('@')[0] || 'ユーザー',
-            avatar: 'https://picsum.photos/seed/avatar123/36/48.jpg',
-            location: locationMap[p.locationId]?.name || '—',
-          },
-          content: p.content,
-          image: p.imageUrl ? { src: p.imageUrl, alt: 'post' } : null,
-          videoUrl: p.videoUrl,
-          timestamp: p.createdAt || new Date().toISOString(),
-          likes: Array.isArray(p.likedBy) ? p.likedBy.length : 0,
-        }));
+        // Parse title and content
+        const adapted = (list || []).map(p => {
+          let title = '';
+          let content = p.content || '';
+          const parts = content.split('\n\n');
+          if (parts.length >= 2 && parts[0].length < 100) {
+            title = parts[0].trim();
+            content = parts.slice(1).join('\n\n').trim();
+          }
+          
+          return {
+            id: p.id,
+            author: {
+              name: user.name || user.email?.split('@')[0] || 'ユーザー',
+              avatar: 'https://picsum.photos/seed/avatar123/36/48.jpg',
+              location: locationMap[p.locationId]?.name || '—',
+            },
+            title: title,
+            content: content,
+            image: p.imageUrl ? { src: p.imageUrl, alt: 'post' } : null,
+            videoUrl: p.videoUrl,
+            timestamp: p.createdAt || new Date().toISOString(),
+            likes: Array.isArray(p.likedBy) ? p.likedBy.length : 0,
+          };
+        });
         setMyPosts(adapted);
       } catch (e) {
         console.error('Failed to load my posts:', e);
@@ -153,6 +172,9 @@ export default function MyPost() {
                   />
                   <span className="review-name">{post.author.name} - {post.author.location}</span>
                 </div>
+                {post.title && (
+                  <h3 className="review-title" style={{ marginBottom: '10px', fontWeight: '600', fontSize: '18px' }}>{post.title}</h3>
+                )}
                 <p className="review-text">{post.content}</p>
                 <div className="review-actions">
                   {likedPosts.has(post.id) ? (
@@ -167,29 +189,65 @@ export default function MyPost() {
                     />
                   )}
                   <button className="comment-btn" onClick={() => handleComment(post.id)}>Comment</button>
+                  {post.videoUrl && (
+                    <a 
+                      href={post.videoUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{ textDecoration: 'none' }}
+                      onClick={() => {
+                        // Save to video history when clicking YouTube button
+                        const currentHistory = JSON.parse(localStorage.getItem('videoHistory') || '[]');
+                        const videoEntry = {
+                          id: post.id || Date.now(),
+                          title: post.title || post.content?.substring(0, 50) || '動画',
+                          thumbnail: post.image?.src || `https://img.youtube.com/vi/${extractYouTubeId(post.videoUrl)}/hqdefault.jpg`,
+                          youtubeUrl: post.videoUrl,
+                          timestamp: Date.now()
+                        };
+                        // Check if already exists (by youtubeUrl) - only save once
+                        const exists = currentHistory.some(v => v.youtubeUrl === post.videoUrl);
+                        if (!exists) {
+                          const updatedHistory = [videoEntry, ...currentHistory].slice(0, 20);
+                          localStorage.setItem('videoHistory', JSON.stringify(updatedHistory));
+                        }
+                      }}
+                    >
+                      <button style={{ padding: '8px 16px', background: '#ff0000', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', marginLeft: '10px' }}>
+                        <FaYoutube /> YouTube
+                      </button>
+                    </a>
+                  )}
                 </div>
               </div>
               <div className="review-image-wrapper">
-                {post.image && (
+                {post.videoUrl ? (
+                  <a 
+                    href={post.videoUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    style={{ display: 'block', position: 'relative' }}
+                  >
+                    <img
+                      src={post.image?.src || `https://img.youtube.com/vi/${extractYouTubeId(post.videoUrl)}/maxresdefault.jpg`}
+                      alt="YouTube thumbnail"
+                      className="review-image"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      onError={(e) => {
+                        e.target.src = `https://img.youtube.com/vi/${extractYouTubeId(post.videoUrl)}/hqdefault.jpg`;
+                      }}
+                    />
+                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', background: 'rgba(0,0,0,0.7)', borderRadius: '50%', width: '60px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <FaYoutube style={{ color: 'white', fontSize: '30px' }} />
+                    </div>
+                  </a>
+                ) : post.image ? (
                   <img
                     src={post.image.src}
                     alt={post.image.alt}
                     className="review-image"
                   />
-                )}
-                {post.videoUrl && (
-                  <a 
-                    href={post.videoUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="video-link"
-                    style={{ display: 'block', marginTop: '10px' }}
-                  >
-                    <button style={{ padding: '8px 16px', background: '#ff0000', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                      YouTube で見る
-                    </button>
-                  </a>
-                )}
+                ) : null}
               </div>
             </div>
           ))

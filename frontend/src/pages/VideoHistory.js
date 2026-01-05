@@ -9,13 +9,15 @@ export default function VideoHistory() {
   const navigate = useNavigate();
   const [videoHistory, setVideoHistory] = useState([]);
 
-  // Load video data from library instead of localStorage
+  // Load video history from localStorage
   useEffect(() => {
-    // Get all videos from library (both yoga and gym)
-    const yogaVideos = getVideos(5);
-    const gymVideos = getVideos(6);
-    const allVideos = [...yogaVideos, ...gymVideos];
-    setVideoHistory(allVideos);
+    const stored = JSON.parse(localStorage.getItem('videoHistory') || '[]');
+    if (stored && stored.length > 0) {
+      setVideoHistory(stored);
+    } else {
+      // If no history, show empty state
+      setVideoHistory([]);
+    }
   }, []);
 
   const formatDate = (timestamp) => {
@@ -32,16 +34,41 @@ export default function VideoHistory() {
     // Open YouTube URL in new tab
     const youtubeUrl = video.youtubeUrl || video.url || video.videoUrl;
     if (youtubeUrl) {
+      // Save to video history when clicking to watch
+      const currentHistory = JSON.parse(localStorage.getItem('videoHistory') || '[]');
+      const videoEntry = {
+        id: video.id || Date.now(),
+        title: video.title || '無題の動画',
+        thumbnail: video.thumbnail || `https://img.youtube.com/vi/${extractYouTubeId(youtubeUrl)}/hqdefault.jpg`,
+        youtubeUrl: youtubeUrl,
+        timestamp: Date.now()
+      };
+      // Check if already exists (by youtubeUrl) - only save once
+      const exists = currentHistory.some(v => v.youtubeUrl === youtubeUrl);
+      if (!exists) {
+        const updatedHistory = [videoEntry, ...currentHistory].slice(0, 20);
+        localStorage.setItem('videoHistory', JSON.stringify(updatedHistory));
+        // Update state to reflect new history
+        setVideoHistory(updatedHistory);
+      }
       window.open(youtubeUrl, '_blank', 'noopener,noreferrer');
     } else {
       console.error('No YouTube URL found for video:', video);
     }
   };
 
+  // Extract YouTube video ID from URL
+  const extractYouTubeId = (url) => {
+    if (!url) return '';
+    const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+    return match ? match[1] : '';
+  };
+
   const handleClearHistory = () => {
-    setVideoHistory([]);
-    // Also clear from localStorage if it exists
-    localStorage.removeItem('videoHistory');
+    if (window.confirm('履歴をクリアしますか？')) {
+      setVideoHistory([]);
+      localStorage.removeItem('videoHistory');
+    }
   };
 
   return (
@@ -107,7 +134,9 @@ export default function VideoHistory() {
                         id: video.id || Date.now(),
                         title: video.title || '無題の動画',
                         thumbnail: video.thumbnail || '',
-                        url: video.videoUrl || video.url,
+                        youtubeUrl: video.youtubeUrl || video.url || video.videoUrl,
+                        url: video.youtubeUrl || video.url || video.videoUrl,
+                        videoUrl: video.youtubeUrl || video.url || video.videoUrl,
                         description: video.description || '',
                         category: video.category || 'ヨガ',
                         uploadDate: video.uploadDate || video.timestamp
