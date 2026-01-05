@@ -13,7 +13,11 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
-app.use(express.json());
+
+// Increase JSON body size limit to handle base64 images and larger payloads
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 app.use('/api', routes);
 app.use('/api-docs', swaggerRoutes);
@@ -21,3 +25,4 @@ app.use(errorHandler);
 
 export default app;
 
+ 
