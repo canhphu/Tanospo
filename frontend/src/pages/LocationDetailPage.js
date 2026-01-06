@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { locations } from '../lib/locationsData';
 import { postsAPI } from '../api/posts';
 import { usersAPI } from '../api/users';
+import { locationsAPI } from '../api/locations';
 import '../styles/LocationDetailPage.css';
 
 // Calculate distance between two coordinates (Haversine formula)
@@ -59,10 +60,61 @@ export default function LocationDetailPage() {
     setLocation(foundLocation);
     
     if (foundLocation && locationId) {
-      // Fetch all posts then filter by this locationId
+      // Fetch all posts then filter by locationId OR location name from backend
       postsAPI.getAll({ limit: 100, offset: 0 })
         .then(async (allPosts) => {
-          const locationPosts = (allPosts || []).filter(p => p.locationId === locationId);
+          const locationName = foundLocation.name || '';
+          // Convert locationId to string for comparison (handles both number and string IDs)
+          const locationIdStr = String(locationId);
+          
+          // Get unique locationIds from posts
+          const uniqueLocationIds = Array.from(
+            new Set(
+              (allPosts || [])
+                .map(p => p.locationId)
+                .filter(Boolean)
+            )
+          );
+          
+          // Fetch all locations from backend
+          const locationMap = {};
+          await Promise.all(
+            uniqueLocationIds.map(async (locId) => {
+              try {
+                const loc = await locationsAPI.getById(locId);
+                if (loc && loc.name) {
+                  locationMap[locId] = loc;
+                }
+              } catch (err) {
+                // Ignore missing locations
+                console.debug(`Location ${locId} not found:`, err);
+              }
+            })
+          );
+          
+          // Filter posts by locationId OR location name from fetched locations
+          const locationPosts = (allPosts || []).filter(p => {
+            // Match by locationId (convert both to string for comparison)
+            const matchesLocationId = p.locationId && (
+              String(p.locationId) === locationIdStr || 
+              p.locationId === locationId
+            );
+            
+            // Match by location name from backend location
+            const postLocation = p.locationId ? locationMap[p.locationId] : null;
+            const matchesLocationName = postLocation && 
+              postLocation.name && 
+              locationName &&
+              postLocation.name.toLowerCase() === locationName.toLowerCase();
+            
+            // Also check content for location name (fallback)
+            const matchesContent = locationName && 
+              p.content && 
+              typeof p.content === 'string' &&
+              p.content.toLowerCase().includes(locationName.toLowerCase());
+            
+            return matchesLocationId || matchesLocationName || matchesContent;
+          });
 
           const uniqueUserIds = Array.from(new Set(locationPosts.map(p => p.userId).filter(Boolean)));
           const userMap = {};
@@ -74,18 +126,21 @@ export default function LocationDetailPage() {
             } catch { /* ignore missing users */ }
           }));
 
-          const adapted = locationPosts.map(p => ({
-            id: p.id,
-            author: {
-              name: (userMap[p.userId]?.name) || (userMap[p.userId]?.email?.split('@')[0]) || 'ユーザー',
-              avatar: userMap[p.userId]?.avatarUrl || 'https://picsum.photos/seed/avatar123/36/48.jpg',
-              location: foundLocation.name,
-            },
-            content: p.content,
-            image: p.imageUrl ? { src: p.imageUrl, alt: 'post' } : null,
-            timestamp: p.createdAt || new Date().toISOString(),
-            likes: Array.isArray(p.likedBy) ? p.likedBy.length : 0,
-          }));
+          const adapted = locationPosts.map(p => {
+            const postLocation = p.locationId ? locationMap[p.locationId] : null;
+            return {
+              id: p.id,
+              author: {
+                name: (userMap[p.userId]?.name) || (userMap[p.userId]?.email?.split('@')[0]) || 'ユーザー',
+                avatar: userMap[p.userId]?.avatarUrl || 'https://picsum.photos/seed/avatar123/36/48.jpg',
+                location: postLocation?.name || foundLocation.name,
+              },
+              content: p.content,
+              image: p.imageUrl ? { src: p.imageUrl, alt: 'post' } : null,
+              timestamp: p.createdAt || new Date().toISOString(),
+              likes: Array.isArray(p.likedBy) ? p.likedBy.length : 0,
+            };
+          });
 
           setPosts(adapted);
         })
